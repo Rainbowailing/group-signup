@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>AI 智能体学习小组</title>
-
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ===== Reset & Variables ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -746,11 +743,37 @@ let store = { participants: [], groups: [], phase: 'signup' };
 // ============================================================
 // Supabase Initialization
 // ============================================================
+function loadScript(url, timeoutMs = 8000) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Script load failed'));
+    document.head.appendChild(script);
+    setTimeout(() => reject(new Error('Script load timeout')), timeoutMs);
+  });
+}
+
 async function initSupabase() {
   const cfg = SUPABASE_CONFIG;
   if (!cfg.url || cfg.url.includes('YOUR')) return false;
 
   try {
+    // Dynamically load Supabase SDK (non-blocking)
+    if (!window.supabase) {
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js', 5000);
+      } catch(e) {
+        // Try alternative CDN
+        try {
+          await loadScript('https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js', 5000);
+        } catch(e2) {
+          console.warn('Supabase SDK failed to load');
+          return false;
+        }
+      }
+    }
+
     supabase = window.supabase.createClient(cfg.url, cfg.anonKey);
 
     // Load initial data
@@ -1464,17 +1487,19 @@ document.getElementById('input-wechat').addEventListener('keydown', (e) => {
 // Init
 // ============================================================
 async function init() {
-  // Try Supabase first
-  useOnline = await initSupabase();
+  // Always start with localStorage so page is instantly usable
+  const localStore = getLocalStore();
+  store = localStore;
+  if (!store.groups) store.groups = [];
+  if (!store.participants) store.participants = [];
+  if (!store.phase) store.phase = 'signup';
+  refreshUI();
 
-  if (!useOnline) {
-    // Load from localStorage
-    store = getLocalStore();
-    if (!store.groups) store.groups = [];
-    if (!store.participants) store.participants = [];
-    if (!store.phase) store.phase = 'signup';
+  // Try Supabase in background
+  useOnline = await initSupabase();
+  if (useOnline) {
+    showToast('已连接线上模式 ☁️', 3000);
   }
-  // If online mode, store is already being synced by listeners
 
   // Update mode badge
   const badge = document.getElementById('mode-badge');
@@ -1489,7 +1514,7 @@ async function init() {
       badge.textContent = '💻 本地模式';
       badge.style.background = '#FFF3E0';
       badge.style.color = '#E65100';
-      hint.textContent = '当前为本地模式，数据仅保存在此浏览器。配置Supabase后所有人可实时共享数据。';
+      hint.textContent = '当前为本地模式，数据仅保存在此浏览器。';
     }
   }
 

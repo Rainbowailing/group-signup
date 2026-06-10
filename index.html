@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AI 智能体学习小组</title>
+
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+/* ===== Reset & Variables ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #FF6B6B;
+  --primary-dark: #E55A5A;
+  --bg: #FFF5F5;
+  --card-bg: #FFFFFF;
+  --text: #2D3436;
+  --text-light: #636E72;
+  --text-lighter: #B2BEC3;
+  --shadow: 0 2px 16px rgba(255,107,107,0.08);
+  --shadow-lg: 0 8px 32px rgba(255,107,107,0.12);
+  --radius: 20px;
+  --radius-sm: 14px;
+  --font-xl: 28px;
+  --font-lg: 20px;
+  --font-md: 16px;
+  --font-sm: 14px;
+  --font-xs: 12px;
+}
+
+/* ===== Base ===== */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(160deg, #FFF5F5 0%, #FFE8E8 30%, #FFE0F0 60%, #FFF0F5 100%);
+  min-height: 100vh;
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  width: 100%;
+  max-width: 440px;
+  padding: 20px 16px 40px;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.header {
+  text-align: center;
+  padding: 24px 0 20px;
+}
+.header-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+  display: block;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.header h1 {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header p {
+  font-size: var(--font-sm);
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* ===== Counter Card ===== */
+.counter-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.counter-number {
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+.counter-label {
+  font-size: var(--font-sm);
+  color: var(--text-light);
+  margin-top: 4px;
+}
+.progress-bar {
+  margin-top: 14px;
+  height: 8px;
+  background: #FFE8E8;
+  border-radius: 100px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF8E8E, #FF6B6B);
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+/* ===== Form Card ===== */
+.form-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.form-card h2 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  margin-bottom: 18px;
+  text-align: center;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.form-group input {
+  width: 100%;
+  height: 50px;
+  border: 2px solid #F0E0E0;
+  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  font-size: var(--font-md);
+  color: var(--text);
+  background: #FFFAFA;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #FFF;
+}
+.form-group input::placeholder {
+  color: var(--text-lighter);
+}
+.btn {
+  display: block;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  color: #FFF;
+  box-shadow: 0 4px 16px rgba(255,107,107,0.3);
+}
+.btn-outline {
+  background: #FFF;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+.btn-sm {
+  height: 38px;
+  width: auto;
+  display: inline-block;
+  padding: 0 16px;
+  font-size: var(--font-sm);
+}
+
+/* ===== Status Message ===== */
+.status-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.status-icon {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 12px;
+}
+.status-card h3 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.status-card p {
+  font-size: var(--font-sm);
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+/* ===== Group Selection Cards ===== */
+.section-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.group-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  position: relative;
+  border: 3px solid transparent;
+  transition: border-color 0.2s, transform 0.15s;
+  cursor: pointer;
+}
+.group-card:active {
+  transform: scale(0.98);
+}
+.group-card.full {
+  opacity: 0.55;
+  cursor: default;
+}
+.group-card.full:active {
+  transform: none;
+}
+.group-card.selected {
+  border-color: #4ECB71;
+  background: #F5FFF7;
+}
+.group-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.group-theme {
+  font-size: var(--font-lg);
+  font-weight: 700;
+}
+.group-capacity {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+.capacity-open { background: #E8F5E9; color: #2E7D32; }
+.capacity-full { background: #FFE8E8; color: #C62828; }
+.group-leader {
+  font-size: var(--font-sm);
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+.group-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.person-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FFF0F5;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: var(--font-xs);
+  color: var(--text);
+}
+.person-tag.leader {
+  background: #FFE8E8;
+  font-weight: 600;
+}
+
+/* ===== My Group View ===== */
+.my-group-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 20px;
+  border: 3px solid #4ECB71;
+}
+.my-group-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.my-group-header .check-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+}
+.my-group-header h3 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: #2E7D32;
+}
+.my-group-theme {
+  font-size: var(--font-md);
+  color: var(--text-light);
+  margin-top: 4px;
+}
+.member-list {
+  border-top: 1px solid #F0E0E0;
+  padding-top: 16px;
+}
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #FFF0F5;
+}
+.member-item:last-child {
+  border-bottom: none;
+}
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.member-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: #FFF;
+  flex-shrink: 0;
+}
+.member-name {
+  font-size: var(--font-md);
+  font-weight: 600;
+}
+.member-wechat {
+  font-size: var(--font-xs);
+  color: var(--text-light);
+}
+.member-badge {
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-weight: 600;
+}
+.badge-leader { background: #FFE8E8; color: #C62828; }
+.badge-you { background: #E8F5E9; color: #2E7D32; }
+
+/* ===== Admin Panel ===== */
+.admin-panel {
+  display: none;
+}
+.admin-panel.active {
+  display: block;
+}
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.admin-header h2 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+}
+.admin-section {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.admin-section h3 {
+  font-size: var(--font-md);
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-light);
+}
+.phase-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.phase-btn {
+  flex: 1;
+  min-width: 100px;
+  height: 44px;
+  border: 2px solid #F0E0E0;
+  border-radius: var(--radius-sm);
+  background: #FFF;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.phase-btn.active {
+  border-color: var(--primary);
+  background: #FFF5F5;
+  color: var(--primary);
+}
+.admin-group-item {
+  background: #FFFAFA;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #F0E0E0;
+}
+.admin-group-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.admin-group-row:last-child {
+  margin-bottom: 0;
+}
+.admin-group-row label {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-light);
+  white-space: nowrap;
+  min-width: 32px;
+}
+.admin-group-row input,
+.admin-group-row select {
+  flex: 1;
+  height: 38px;
+  border: 1px solid #E8D8D8;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: var(--font-sm);
+  background: #FFF;
+  color: var(--text);
+}
+.admin-group-row input:focus,
+.admin-group-row select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ===== Footer ===== */
+.footer {
+  text-align: center;
+  padding: 20px 0;
+}
+.footer a {
+  font-size: var(--font-xs);
+  color: var(--text-lighter);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal {
+  background: #FFF;
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+.modal h3 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.modal p {
+  font-size: var(--font-sm);
+  color: var(--text-light);
+  margin-bottom: 18px;
+}
+.modal input {
+  width: 100%;
+  height: 48px;
+  border: 2px solid #F0E0E0;
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  font-size: var(--font-md);
+  text-align: center;
+  margin-bottom: 14px;
+}
+.modal input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2D3436;
+  color: #FFF;
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+}
+
+/* ===== Hidden ===== */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <!-- Header -->
+  <div class="header">
+    <span class="header-icon">🤖</span>
+    <h1>AI 智能体学习小组</h1>
+    <p>和小伙伴一起学习，一起进步</p>
+  </div>
+
+  <!-- ===== VIEW 1: Sign-in ===== -->
+  <div id="view-signin">
+    <div class="counter-card">
+      <div class="counter-number" id="counter">0</div>
+      <div class="counter-label">已签到人数</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="form-card" id="signin-form-card">
+      <h2>📝 我要签到</h2>
+      <div class="form-group">
+        <label>你的昵称</label>
+        <input type="text" id="input-nickname" placeholder="怎么称呼你？" maxlength="20" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>微信号</label>
+        <input type="text" id="input-wechat" placeholder="方便同组伙伴联系你" maxlength="40" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="btn-signin">提交签到</button>
+      <div style="text-align:center;margin-top:6px">
+        <span style="font-size:var(--font-xs);color:var(--text-lighter)">签到后等待管理员开放选组</span>
+      </div>
+    </div>
+
+    <div id="signin-done-card" class="status-card hidden">
+      <span class="status-icon">✅</span>
+      <h3>签到成功！</h3>
+      <p>你好，<strong id="signed-name"></strong></p>
+      <p>请耐心等待管理员开放选组<br>届时重新打开本页面即可选择小组</p>
+      <button class="btn btn-outline btn-sm" id="btn-resign" style="margin-top:12px;">修改签到信息</button>
+    </div>
+  </div>
+
+  <!-- ===== VIEW 2: Group Selection ===== -->
+  <div id="view-selection" class="hidden">
+    <div class="section-title">🎯 请选择你想加入的小组</div>
+    <div id="group-list"></div>
+  </div>
+
+  <!-- ===== VIEW 3: My Group ===== -->
+  <div id="view-mygroup" class="hidden"></div>
+
+  <!-- ===== Footer ===== -->
+  <div class="footer">
+    <a id="link-admin">管理入口</a>
+  </div>
+
+  <!-- ===== Admin Modal ===== -->
+  <div class="modal-overlay" id="admin-password-modal">
+    <div class="modal">
+      <h3>🔑 管理员验证</h3>
+      <p>请输入管理密码</p>
+      <input type="password" id="input-admin-password" placeholder="输入密码" maxlength="20">
+      <button class="btn btn-primary" id="btn-admin-login">进入管理面板</button>
+      <button class="btn btn-outline btn-sm" id="btn-admin-cancel" style="margin-top:8px;">取消</button>
+    </div>
+  </div>
+
+  <!-- ===== Admin Panel ===== -->
+  <div class="admin-panel" id="admin-panel">
+    <!-- Phase Control -->
+    <div class="admin-section">
+      <div class="admin-header">
+        <h2>⚙️ 管理面板 <span id="mode-badge" style="font-size:var(--font-xs);font-weight:400;padding:2px 8px;border-radius:100px;background:#E8F5E9;color:#2E7D32;">本地模式</span></h2>
+        <button class="btn btn-outline btn-sm" id="btn-admin-close">退出</button>
+      </div>
+      <p id="firebase-hint" style="font-size:var(--font-xs);color:var(--text-lighter);margin-bottom:12px;">当前为本地模式，数据仅保存在此浏览器。配置Supabase后可多人实时共享。</p>
+      <h3>当前阶段</h3>
+      <div class="phase-buttons">
+        <button class="phase-btn active" data-phase="signup">📝 签到阶段</button>
+        <button class="phase-btn" data-phase="selection">🎯 选组阶段</button>
+        <button class="phase-btn" data-phase="done">🏁 已结束</button>
+      </div>
+    </div>
+
+    <!-- Group Management -->
+    <div class="admin-section">
+      <h3>小组管理</h3>
+      <div id="admin-groups"></div>
+      <button class="btn btn-primary" id="btn-add-group" style="margin-top:8px;">+ 新增小组</button>
+    </div>
+
+    <!-- Participant List -->
+    <div class="admin-section">
+      <h3>签到人员 (<span id="admin-participant-count">0</span>人)</h3>
+      <div id="admin-participants" style="font-size:var(--font-sm);color:var(--text-light);line-height:1.8;"></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="admin-section" style="text-align:center;">
+      <h3>🔧 设置</h3>
+      <button class="btn btn-outline btn-sm" id="btn-change-password">修改管理密码</button>
+      <button class="btn btn-outline btn-sm" id="btn-export-data" style="margin-left:8px;">导出数据</button>
+      <button class="btn btn-outline btn-sm" id="btn-reset-all" style="margin-left:8px;border-color:#C62828;color:#C62828;">清空全部数据</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// Supabase Configuration
+// ============================================================
+const SUPABASE_CONFIG = {
+  url: 'https://pdmkafoursgyesxsijrc.supabase.co',
+  anonKey: 'sb_publishable_m0xlWgUw1XyxoEOf-gU3oQ_6JKz9c3A'
+};
+
+// ============================================================
+// Data Layer (Supabase mode + localStorage fallback)
+// ============================================================
+const USER_KEY = 'group_signup_user';
+const DEFAULT_ADMIN_PASSWORD = 'admin123';
+const TOTAL_TARGET = 55;
+
+let supabase = null;
+let useOnline = false;
+
+// ----- Supabase ↔ JS 字段映射 -----
+// DB (snake_case) → JS (camelCase) → DB (snake_case)
+function mapParticipant(db) {
+  return { id: db.id, nickname: db.nickname, wechatId: db.wechat_id, groupId: db.group_id, createdAt: db.created_at };
+}
+function mapGroup(db) {
+  return { id: db.id, name: db.name, theme: db.theme, leaderId: db.leader_id, maxSize: db.max_size, order: db.sort_order };
+}
+
+// ----- Local Storage Helpers -----
+function getLocalStore() {
+  try {
+    const raw = localStorage.getItem('group_signup_data');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { participants: [], groups: [], phase: 'signup' };
+}
+function saveLocalStore(s) {
+  localStorage.setItem('group_signup_data', JSON.stringify(s));
+}
+function getLocalSettings() {
+  try {
+    const raw = localStorage.getItem('group_signup_settings');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { adminPassword: DEFAULT_ADMIN_PASSWORD };
+}
+function saveLocalSettings(s) {
+  localStorage.setItem('group_signup_settings', JSON.stringify(s));
+}
+
+// ----- Admin Password -----
+function getAdminPassword() {
+  if (useOnline) {
+    return window._adminPwd || DEFAULT_ADMIN_PASSWORD;
+  }
+  return getLocalSettings().adminPassword;
+}
+function setAdminPassword(newPwd) {
+  window._adminPwd = newPwd;
+  if (useOnline && supabase) {
+    supabase.from('settings').upsert({ id: 'main', admin_password: newPwd });
+  } else {
+    const s = getLocalSettings();
+    s.adminPassword = newPwd;
+    saveLocalSettings(s);
+  }
+}
+
+// ----- Current User (per-device, always localStorage) -----
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+function setCurrentUser(user) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+function clearCurrentUser() {
+  localStorage.removeItem(USER_KEY);
+}
+
+// ----- Data Store (in-memory, synced from Supabase or localStorage) -----
+let store = { participants: [], groups: [], phase: 'signup' };
+
+// ============================================================
+// Supabase Initialization
+// ============================================================
+async function initSupabase() {
+  const cfg = SUPABASE_CONFIG;
+  if (!cfg.url || cfg.url.includes('YOUR')) return false;
+
+  try {
+    supabase = window.supabase.createClient(cfg.url, cfg.anonKey);
+
+    // Load initial data
+    const [pRes, gRes, sRes] = await Promise.all([
+      supabase.from('participants').select('*'),
+      supabase.from('groups').select('*').order('sort_order'),
+      supabase.from('settings').select('*').eq('id', 'main').maybeSingle()
+    ]);
+
+    if (pRes.data) store.participants = pRes.data.map(mapParticipant);
+    if (gRes.data) store.groups = gRes.data.map(mapGroup);
+    if (sRes.data) {
+      store.phase = sRes.data.phase || 'signup';
+      window._adminPwd = sRes.data.admin_password || DEFAULT_ADMIN_PASSWORD;
+    }
+
+    // Real-time subscriptions
+    supabase.channel('participants-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, async () => {
+        const { data } = await supabase.from('participants').select('*');
+        if (data) store.participants = data.map(mapParticipant);
+        refreshUI();
+      }).subscribe();
+
+    supabase.channel('groups-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, async () => {
+        const { data } = await supabase.from('groups').select('*').order('sort_order');
+        if (data) store.groups = data.map(mapGroup);
+        refreshUI();
+      }).subscribe();
+
+    supabase.channel('settings-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, async (payload) => {
+        const newData = payload.new;
+        if (newData) {
+          if (newData.phase !== undefined) store.phase = newData.phase;
+          if (newData.admin_password !== undefined) window._adminPwd = newData.admin_password;
+          refreshUI();
+        }
+      }).subscribe();
+
+    return true;
+  } catch(e) {
+    console.warn('Supabase init failed, using localStorage:', e.message);
+    return false;
+  }
+}
+
+// ============================================================
+// Data Operations (abstracted for both modes)
+// ============================================================
+
+async function addParticipant(data) {
+  if (useOnline) {
+    await supabase.from('participants').insert({
+      nickname: data.nickname, wechat_id: data.wechatId, group_id: null
+    });
+  } else {
+    const p = { id: genId(), nickname: data.nickname, wechatId: data.wechatId, groupId: null, createdAt: Date.now() };
+    store.participants.push(p);
+    saveLocalStore(store);
+    return p;
+  }
+}
+
+async function updateParticipantGroup(participantId, groupId) {
+  if (useOnline) {
+    await supabase.from('participants').update({ group_id: groupId }).eq('id', participantId);
+  } else {
+    const p = store.participants.find(x => x.id === participantId);
+    if (p) { p.groupId = groupId; saveLocalStore(store); }
+  }
+}
+
+async function findParticipantByWechat(wechatId) {
+  if (useOnline) {
+    const { data } = await supabase.from('participants').select('*').eq('wechat_id', wechatId).maybeSingle();
+    return data ? mapParticipant(data) : null;
+  } else {
+    return store.participants.find(p => p.wechatId === wechatId) || null;
+  }
+}
+
+async function removeParticipantDb(participantId) {
+  if (useOnline) {
+    await supabase.from('participants').delete().eq('id', participantId);
+  } else {
+    store.participants = store.participants.filter(x => x.id !== participantId);
+    store.groups.forEach(g => { if (g.leaderId === participantId) g.leaderId = null; });
+    saveLocalStore(store);
+  }
+}
+
+async function addGroupDb() {
+  const count = store.groups.length + 1;
+  const group = { name: `第${count}组`, theme: '', leader_id: null, max_size: 7, sort_order: store.groups.length };
+  if (useOnline) {
+    await supabase.from('groups').insert(group);
+  } else {
+    group.id = genId();
+    store.groups.push({ id: group.id, name: group.name, theme: group.theme, leaderId: null, maxSize: 7, order: group.sort_order });
+    saveLocalStore(store);
+  }
+}
+
+async function updateGroupDb(groupId, data) {
+  if (useOnline) {
+    const dbData = {};
+    if (data.theme !== undefined) dbData.theme = data.theme;
+    if (data.name !== undefined) dbData.name = data.name;
+    if (data.leaderId !== undefined) dbData.leader_id = data.leaderId;
+    if (data.maxSize !== undefined) dbData.max_size = data.maxSize;
+    if (data.order !== undefined) dbData.sort_order = data.order;
+    await supabase.from('groups').update(dbData).eq('id', groupId);
+  } else {
+    const g = store.groups.find(x => x.id === groupId);
+    if (g) { Object.assign(g, data); saveLocalStore(store); }
+  }
+}
+
+async function deleteGroupDb(groupId) {
+  if (useOnline) {
+    await supabase.from('participants').update({ group_id: null }).eq('group_id', groupId);
+    await supabase.from('groups').delete().eq('id', groupId);
+  } else {
+    store.participants.forEach(p => { if (p.groupId === groupId) p.groupId = null; });
+    store.groups = store.groups.filter(g => g.id !== groupId);
+    saveLocalStore(store);
+  }
+}
+
+async function setPhaseDb(phase) {
+  store.phase = phase;
+  if (useOnline) {
+    await supabase.from('settings').upsert({ id: 'main', phase: phase });
+  } else {
+    saveLocalStore(store);
+  }
+}
+
+async function resetAllDb() {
+  if (useOnline) {
+    await supabase.from('participants').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('groups').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('settings').delete().eq('id', 'main');
+    store = { participants: [], groups: [], phase: 'signup' };
+  } else {
+    localStorage.removeItem('group_signup_data');
+    store = { participants: [], groups: [], phase: 'signup' };
+  }
+  clearCurrentUser();
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+async function syncStoreFromLocal() {
+  store = getLocalStore();
+}
+
+function showToast(msg, duration = 2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function getGroupColor(i) {
+  const colors = [
+    '#FF8A80','#82B1FF','#B9F6CA','#B388FF','#FFD180',
+    '#A7FFEB','#F8BBD0','#80D8FF','#CCFF90','#FF80AB',
+    '#84FFFF','#FFE57F'
+  ];
+  return colors[i % colors.length];
+}
+
+function getGroupEmoji(i) {
+  const emojis = ['🌟','💡','📚','⚡','🎯','🔮','🌱','💎','🎨','🔥','🧠','🚀'];
+  return emojis[i % emojis.length];
+}
+
+function getInitial(name) {
+  return (name || '?').charAt(0);
+}
+
+// ============================================================
+// Render: Sign-in View
+// ============================================================
+function renderSignin() {
+  const currentUser = getCurrentUser();
+  const signedCount = store.participants.length;
+  const pct = TOTAL_TARGET > 0 ? Math.min(100, Math.round(signedCount / TOTAL_TARGET * 100)) : 0;
+
+  document.getElementById('counter').textContent = signedCount;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  if (store.phase !== 'signup') {
+    // If phase moved on, show message
+    document.getElementById('signin-form-card').classList.add('hidden');
+    document.getElementById('signin-done-card').classList.remove('hidden');
+    if (currentUser) {
+      document.getElementById('signed-name').textContent = currentUser.nickname;
+    }
+    return;
+  }
+
+  if (currentUser && currentUser.groupId) {
+    // User already in a group
+    document.getElementById('signin-form-card').classList.add('hidden');
+    document.getElementById('signin-done-card').classList.add('hidden');
+    return;
+  }
+
+  if (currentUser) {
+    // Signed in, waiting
+    document.getElementById('signin-form-card').classList.add('hidden');
+    document.getElementById('signin-done-card').classList.remove('hidden');
+    document.getElementById('signed-name').textContent = currentUser.nickname;
+  } else {
+    // Not signed in yet
+    document.getElementById('signin-form-card').classList.remove('hidden');
+    document.getElementById('signin-done-card').classList.add('hidden');
+  }
+}
+
+// ============================================================
+// Render: Group Selection
+// ============================================================
+function renderSelection() {
+  const container = document.getElementById('group-list');
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    container.innerHTML = '<div class="status-card"><span class="status-icon">🔒</span><h3>请先签到</h3><p>你需要先完成签到才能选组</p></div>';
+    return;
+  }
+
+  if (currentUser.groupId && store.phase === 'selection') {
+    // They already joined a group, redirect to mygroup after a brief view
+  }
+
+  if (store.groups.length === 0) {
+    container.innerHTML = '<div class="status-card"><span class="status-icon">⏳</span><h3>小组准备中</h3><p>管理员正在设置小组，请稍候</p></div>';
+    return;
+  }
+
+  let html = '';
+  if (store.phase === 'done' && !currentUser.groupId) {
+    html += '<div class="status-card" style="margin-bottom:16px;"><span class="status-icon">🏁</span><h3>选组已结束</h3><p>以下是各组最终情况</p></div>';
+  }
+
+  store.groups.forEach((g, i) => {
+    const memberCount = store.participants.filter(p => p.groupId === g.id).length;
+    const isFull = memberCount >= g.maxSize;
+    const isMyGroup = currentUser.groupId === g.id;
+    const members = store.participants.filter(p => p.groupId === g.id);
+    const leader = members.find(p => p.id === g.leaderId);
+
+    html += `<div class="group-card ${isFull ? 'full' : ''} ${isMyGroup ? 'selected' : ''}" data-group-id="${g.id}">`;
+    html += `<div class="group-card-header">`;
+    html += `<span class="group-theme">${getGroupEmoji(i)} ${g.theme || g.name}</span>`;
+    html += `<span class="group-capacity ${isFull ? 'capacity-full' : 'capacity-open'}">${memberCount}/${g.maxSize} ${isFull ? '已满' : ''}</span>`;
+    html += `</div>`;
+    html += `<div class="group-leader">👑 组长：${leader ? leader.nickname : (g.leaderId ? '未知' : '待定')}</div>`;
+
+    if (members.length > 0) {
+      html += `<div class="group-people">`;
+      members.forEach(m => {
+        const isLeader = m.id === g.leaderId;
+        html += `<span class="person-tag ${isLeader ? 'leader' : ''}">${isLeader ? '👑' : '👤'} ${m.nickname}</span>`;
+      });
+      html += `</div>`;
+    }
+
+    if (store.phase !== 'done') {
+      if (isMyGroup) {
+        html += `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();leaveGroup()">退出此组</button>`;
+      } else if (!isFull) {
+        html += `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();joinGroup('${g.id}')">加入这个组</button>`;
+      }
+    }
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ============================================================
+// Render: My Group
+// ============================================================
+function renderMyGroup() {
+  const container = document.getElementById('view-mygroup');
+  const currentUser = getCurrentUser();
+
+  if (!currentUser || !currentUser.groupId) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const group = store.groups.find(g => g.id === currentUser.groupId);
+  if (!group) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const members = store.participants.filter(p => p.groupId === group.id);
+  const leader = members.find(m => m.id === group.leaderId);
+
+  let html = '<div class="my-group-card">';
+  html += '<div class="my-group-header">';
+  html += '<span class="check-icon">✅</span>';
+  html += `<h3>你已加入：${group.theme || group.name}</h3>`;
+  html += `<div class="my-group-theme">👑 组长：${leader ? leader.nickname : '待定'}</div>`;
+  html += '</div>';
+
+  html += '<div class="member-list">';
+  html += '<div style="font-size:var(--font-sm);font-weight:600;color:var(--text-light);margin-bottom:8px;">组员列表</div>';
+  members.forEach(m => {
+    const isLeader = m.id === group.leaderId;
+    const isYou = m.id === currentUser.id;
+    const bgColor = getGroupColor(store.groups.indexOf(group));
+    html += '<div class="member-item">';
+    html += '<div class="member-info">';
+    html += `<div class="member-avatar" style="background:${bgColor}">${getInitial(m.nickname)}</div>`;
+    html += '<div>';
+    html += `<div class="member-name">${m.nickname} ${isYou ? '(你)' : ''}</div>`;
+    html += `<div class="member-wechat">微信：${m.wechatId}</div>`;
+    html += '</div>';
+    html += '</div>';
+    if (isLeader) {
+      html += '<span class="member-badge badge-leader">组长</span>';
+    } else if (isYou) {
+      html += '<span class="member-badge badge-you">你</span>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+
+  if (store.phase !== 'done') {
+    html += `<button class="btn btn-outline btn-sm" id="btn-leave-group" style="margin-top:16px;width:100%;">退出此组，换到其他组</button>`;
+  }
+  html += '</div>';
+
+  container.innerHTML = html;
+
+  // Bind leave button
+  const leaveBtn = document.getElementById('btn-leave-group');
+  if (leaveBtn) {
+    leaveBtn.addEventListener('click', leaveGroup);
+  }
+}
+
+// ============================================================
+// Actions
+// ============================================================
+async function doSignin() {
+  const nickname = document.getElementById('input-nickname').value.trim();
+  const wechatId = document.getElementById('input-wechat').value.trim();
+
+  if (!nickname) { showToast('请输入昵称'); return; }
+  if (!wechatId) { showToast('请输入微信号'); return; }
+
+  // Check duplicate by wechatId
+  const existing = await findParticipantByWechat(wechatId);
+  if (existing) {
+    // Update existing
+    if (useOnline) {
+      await supabase.from('participants').update({ nickname: nickname }).eq('id', existing.id);
+    } else {
+      const p = store.participants.find(x => x.id === existing.id);
+      if (p) { p.nickname = nickname; saveLocalStore(store); }
+    }
+    setCurrentUser({ id: existing.id, nickname, wechatId, groupId: existing.groupId || null });
+  } else {
+    await addParticipant({ nickname, wechatId });
+    // Re-find the newly created participant to get its ID
+    const created = await findParticipantByWechat(wechatId);
+    if (created) {
+      setCurrentUser({ id: created.id, nickname, wechatId, groupId: null });
+    }
+  }
+
+  document.getElementById('input-nickname').value = '';
+  document.getElementById('input-wechat').value = '';
+  showToast('签到成功！✅');
+  refreshUI();
+}
+
+function doResign() {
+  clearCurrentUser();
+  refreshUI();
+}
+
+async function joinGroup(groupId) {
+  const currentUser = getCurrentUser();
+  if (!currentUser) { showToast('请先签到'); return; }
+
+  const group = store.groups.find(g => g.id === groupId);
+  if (!group) { showToast('小组不存在'); return; }
+
+  const memberCount = store.participants.filter(p => p.groupId === groupId).length;
+  if (memberCount >= group.maxSize) { showToast('该小组已满员'); return; }
+
+  await updateParticipantGroup(currentUser.id, groupId);
+  currentUser.groupId = groupId;
+  setCurrentUser(currentUser);
+  showToast(`已加入 ${group.theme || group.name}！`);
+  refreshUI();
+}
+
+async function leaveGroup() {
+  const currentUser = getCurrentUser();
+  if (!currentUser || !currentUser.groupId) return;
+
+  await updateParticipantGroup(currentUser.id, null);
+  currentUser.groupId = null;
+  setCurrentUser(currentUser);
+  showToast('已退出小组');
+  refreshUI();
+}
+
+// ============================================================
+// Admin Actions
+// ============================================================
+function adminLogin() {
+  const pwd = document.getElementById('input-admin-password').value.trim();
+  if (pwd === getAdminPassword()) {
+    document.getElementById('admin-password-modal').classList.remove('active');
+    document.getElementById('admin-panel').classList.add('active');
+    document.getElementById('input-admin-password').value = '';
+    document.getElementById('link-admin').classList.add('hidden');
+    renderAdmin();
+    showToast('欢迎管理员 👋');
+  } else {
+    showToast('密码错误');
+  }
+}
+
+function changeAdminPassword() {
+  const newPwd = prompt('请输入新密码（至少4位）：');
+  if (!newPwd || newPwd.length < 4) {
+    showToast('密码至少4位，修改取消');
+    return;
+  }
+  setAdminPassword(newPwd);
+  showToast('密码已更新！请牢记新密码 🔑');
+}
+
+function adminLogout() {
+  document.getElementById('admin-panel').classList.remove('active');
+  document.getElementById('link-admin').classList.remove('hidden');
+  refreshUI();
+}
+
+async function setPhase(phase) {
+  await setPhaseDb(phase);
+  renderAdmin();
+  refreshUI();
+  const labels = { signup: '签到阶段', selection: '选组阶段', done: '已结束' };
+  showToast('已切换到：' + labels[phase]);
+}
+
+function addGroup() {
+  addGroupDb().then(() => { renderAdmin(); });
+}
+
+async function deleteGroup(groupId) {
+  if (!confirm('确定删除这个小组吗？组内成员将回到待选状态。')) return;
+  await deleteGroupDb(groupId);
+  renderAdmin();
+  refreshUI();
+}
+
+function updateGroupField(groupId, field, value) {
+  const data = {};
+  if (field === 'maxSize') {
+    data.maxSize = Math.max(2, Math.min(20, parseInt(value) || 7));
+  } else if (field === 'leaderId') {
+    data.leaderId = value || null;
+  } else {
+    data[field] = value;
+  }
+  updateGroupDb(groupId, data).then(() => { refreshUI(); });
+}
+
+async function resetAll() {
+  if (!confirm('⚠️ 确定清空全部数据吗？此操作不可恢复！')) return;
+  if (!confirm('再次确认：清空所有签到记录和小组设置？')) return;
+  await resetAllDb();
+  store = { participants: [], groups: [], phase: 'signup' };
+  showToast('已清空全部数据');
+  refreshUI();
+  renderAdmin();
+}
+
+function exportData() {
+  const data = {
+    participants: store.participants,
+    groups: store.groups.map(g => ({
+      ...g,
+      members: store.participants.filter(p => p.groupId === g.id).map(p => ({
+        nickname: p.nickname,
+        wechatId: p.wechatId,
+        isLeader: p.id === g.leaderId,
+      })),
+    })),
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'group-data-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('数据已导出');
+}
+
+async function removeParticipant(participantId) {
+  const p = store.participants.find(x => x.id === participantId);
+  if (!p) return;
+  if (!confirm(`确定移除 ${p.nickname} 吗？ta需要重新签到。`)) return;
+  // Also clear from group leader reference
+  if (useOnline) {
+    const groupsWithLeader = store.groups.filter(g => g.leaderId === participantId);
+    for (const g of groupsWithLeader) {
+      await supabase.from('groups').update({ leader_id: null }).eq('id', g.id);
+    }
+    await supabase.from('participants').delete().eq('id', participantId);
+  } else {
+    store.participants = store.participants.filter(x => x.id !== participantId);
+    store.groups.forEach(g => { if (g.leaderId === participantId) g.leaderId = null; });
+    saveLocalStore(store);
+  }
+  renderAdmin();
+  refreshUI();
+  showToast(`已移除 ${p.nickname}`);
+}
+
+// ============================================================
+// Render: Admin Panel
+// ============================================================
+function renderAdmin() {
+  // Phase buttons
+  document.querySelectorAll('.phase-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.phase === store.phase);
+  });
+
+  // Groups
+  let groupsHtml = '';
+  store.groups.forEach((g, i) => {
+    const memberCount = store.participants.filter(p => p.groupId === g.id).length;
+    const participants = store.participants;
+    groupsHtml += '<div class="admin-group-item">';
+    groupsHtml += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">`;
+    groupsHtml += `<strong>${g.name}</strong>`;
+    groupsHtml += `<span style="font-size:var(--font-xs);color:var(--text-light)">${memberCount}/${g.maxSize}人</span>`;
+    groupsHtml += '</div>';
+
+    groupsHtml += '<div class="admin-group-row">';
+    groupsHtml += '<label>主题</label>';
+    groupsHtml += `<input type="text" value="${escapeHtml(g.theme || '')}" placeholder="例如：Agent开发" onchange="updateGroupField('${g.id}','theme',this.value)">`;
+    groupsHtml += '</div>';
+
+    groupsHtml += '<div class="admin-group-row">';
+    groupsHtml += '<label>组长</label>';
+    groupsHtml += `<select onchange="updateGroupField('${g.id}','leaderId',this.value)">`;
+    groupsHtml += '<option value="">-- 选择组长 --</option>';
+    const groupMembers = participants.filter(p => p.groupId === g.id);
+    participants.forEach(p => {
+      const selected = p.id === g.leaderId ? ' selected' : '';
+      groupsHtml += `<option value="${p.id}"${selected}>${p.nickname}</option>`;
+    });
+    groupsHtml += '</select>';
+    groupsHtml += '</div>';
+
+    groupsHtml += '<div class="admin-group-row">';
+    groupsHtml += '<label>上限</label>';
+    groupsHtml += `<input type="number" value="${g.maxSize}" min="2" max="20" onchange="updateGroupField('${g.id}','maxSize',this.value)">`;
+    groupsHtml += '</div>';
+
+    groupsHtml += `<button class="btn btn-outline btn-sm" style="margin-top:6px;border-color:#FF6B6B;color:#FF6B6B;" onclick="deleteGroup('${g.id}')">删除此组</button>`;
+    groupsHtml += '</div>';
+  });
+
+  if (store.groups.length === 0) {
+    groupsHtml = '<p style="color:var(--text-lighter);text-align:center;padding:20px;">还没有小组，点击下方按钮创建</p>';
+  }
+
+  document.getElementById('admin-groups').innerHTML = groupsHtml;
+
+  // Participant count
+  document.getElementById('admin-participant-count').textContent = store.participants.length;
+
+  // Participant list
+  let partHtml = '';
+  store.participants.forEach(p => {
+    const group = store.groups.find(g => g.id === p.groupId);
+    const isLeader = store.groups.some(g => g.leaderId === p.id);
+    partHtml += `<div style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;margin-bottom:4px;background:#FFF0F5;padding:2px 10px;border-radius:100px;font-size:var(--font-xs);">`;
+    partHtml += `${isLeader ? '👑' : '👤'} ${p.nickname}`;
+    if (group) partHtml += ` <span style="color:var(--primary)">[${group.theme || group.name}]</span>`;
+    partHtml += ` <span style="color:var(--text-lighter)">${p.wechatId}</span>`;
+    partHtml += `<span style="cursor:pointer;color:#FF6B6B;margin-left:2px;" onclick="removeParticipant('${p.id}')" title="移除">✕</span>`;
+    partHtml += '</div>';
+  });
+  if (store.participants.length === 0) {
+    partHtml = '<span style="color:var(--text-lighter)">还没有人签到</span>';
+  }
+  document.getElementById('admin-participants').innerHTML = partHtml;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ============================================================
+// Main Render
+// ============================================================
+function refreshUI() {
+  const currentUser = getCurrentUser();
+  const adminPanelActive = document.getElementById('admin-panel').classList.contains('active');
+
+  // Decide which view to show
+  const viewSignin = document.getElementById('view-signin');
+  const viewSelection = document.getElementById('view-selection');
+  const viewMygroup = document.getElementById('view-mygroup');
+
+  if (adminPanelActive) {
+    viewSignin.classList.add('hidden');
+    viewSelection.classList.add('hidden');
+    viewMygroup.classList.add('hidden');
+    return;
+  }
+
+  if (store.phase === 'signup') {
+    viewSignin.classList.remove('hidden');
+    viewSelection.classList.add('hidden');
+    viewMygroup.classList.add('hidden');
+    renderSignin();
+  } else if (store.phase === 'selection' || store.phase === 'done') {
+    if (currentUser && currentUser.groupId) {
+      // User is in a group - show my group + selection below
+      viewSignin.classList.add('hidden');
+      viewSelection.classList.remove('hidden');
+      viewMygroup.classList.remove('hidden');
+      renderMyGroup();
+      renderSelection();
+    } else if (currentUser) {
+      // Signed in but no group
+      viewSignin.classList.add('hidden');
+      viewSelection.classList.remove('hidden');
+      viewMygroup.classList.add('hidden');
+      renderSelection();
+    } else {
+      // Not signed in
+      viewSignin.classList.remove('hidden');
+      viewSelection.classList.add('hidden');
+      viewMygroup.classList.add('hidden');
+      renderSignin();
+    }
+  }
+
+  renderAdmin();
+}
+
+// ============================================================
+// Event Listeners
+// ============================================================
+document.getElementById('btn-signin').addEventListener('click', doSignin);
+document.getElementById('btn-resign').addEventListener('click', doResign);
+
+document.getElementById('link-admin').addEventListener('click', () => {
+  document.getElementById('admin-password-modal').classList.add('active');
+});
+
+document.getElementById('btn-admin-login').addEventListener('click', adminLogin);
+document.getElementById('btn-admin-cancel').addEventListener('click', () => {
+  document.getElementById('admin-password-modal').classList.remove('active');
+  document.getElementById('input-admin-password').value = '';
+});
+
+document.getElementById('btn-admin-close').addEventListener('click', adminLogout);
+document.getElementById('btn-add-group').addEventListener('click', addGroup);
+document.getElementById('btn-reset-all').addEventListener('click', resetAll);
+document.getElementById('btn-export-data').addEventListener('click', exportData);
+document.getElementById('btn-change-password').addEventListener('click', changeAdminPassword);
+
+// Phase buttons
+document.querySelectorAll('.phase-btn').forEach(btn => {
+  btn.addEventListener('click', () => setPhase(btn.dataset.phase));
+});
+
+// Enter key in password field
+document.getElementById('input-admin-password').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') adminLogin();
+});
+
+// Enter key in signin fields
+document.getElementById('input-wechat').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doSignin();
+});
+
+// ============================================================
+// Init
+// ============================================================
+async function init() {
+  // Try Supabase first
+  useOnline = await initSupabase();
+
+  if (!useOnline) {
+    // Load from localStorage
+    store = getLocalStore();
+    if (!store.groups) store.groups = [];
+    if (!store.participants) store.participants = [];
+    if (!store.phase) store.phase = 'signup';
+  }
+  // If online mode, store is already being synced by listeners
+
+  // Update mode badge
+  const badge = document.getElementById('mode-badge');
+  const hint = document.getElementById('firebase-hint');
+  if (badge && hint) {
+    if (useOnline) {
+      badge.textContent = '☁️ Supabase 线上模式';
+      badge.style.background = '#E3F2FD';
+      badge.style.color = '#1565C0';
+      hint.textContent = '数据实时同步，所有人可见。';
+    } else {
+      badge.textContent = '💻 本地模式';
+      badge.style.background = '#FFF3E0';
+      badge.style.color = '#E65100';
+      hint.textContent = '当前为本地模式，数据仅保存在此浏览器。配置Supabase后所有人可实时共享数据。';
+    }
+  }
+
+  refreshUI();
+}
+
+init();
+</script>
+</body>
+</html>

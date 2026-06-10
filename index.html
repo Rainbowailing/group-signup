@@ -664,17 +664,56 @@ const SUPABASE_CONFIG = {
 };
 
 // ============================================================
-// Data Layer (Supabase mode + localStorage fallback)
+// Data Layer (Supabase REST API + localStorage fallback)
 // ============================================================
 const USER_KEY = 'group_signup_user';
 const DEFAULT_ADMIN_PASSWORD = 'admin123';
 const TOTAL_TARGET = 55;
 
-let supabase = null;
 let useOnline = false;
+let pollTimer = null;
 
-// ----- Supabase ↔ JS 字段映射 -----
-// DB (snake_case) → JS (camelCase) → DB (snake_case)
+// ----- Supabase REST helpers -----
+function supabaseHeaders() {
+  return {
+    'apikey': SUPABASE_CONFIG.anonKey,
+    'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function supabaseGet(table, query) {
+  let url = SUPABASE_CONFIG.url + '/rest/v1/' + table + '?select=*';
+  if (query) url += '&' + query;
+  const res = await fetch(url, { headers: supabaseHeaders() });
+  if (!res.ok) throw new Error(table + ' get failed: ' + res.status);
+  return res.json();
+}
+
+async function supabasePost(table, body) {
+  const url = SUPABASE_CONFIG.url + '/rest/v1/' + table;
+  const res = await fetch(url, {
+    method: 'POST', headers: supabaseHeaders(), body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(table + ' insert failed: ' + res.status);
+}
+
+async function supabasePatch(table, id, body) {
+  const url = SUPABASE_CONFIG.url + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id);
+  const res = await fetch(url, {
+    method: 'PATCH', headers: supabaseHeaders(), body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(table + ' update failed: ' + res.status);
+}
+
+async function supabaseDelete(table, id) {
+  const url = SUPABASE_CONFIG.url + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id);
+  const res = await fetch(url, {
+    method: 'DELETE', headers: supabaseHeaders()
+  });
+  if (!res.ok) throw new Error(table + ' delete failed: ' + res.status);
+}
+
 function mapParticipant(db) {
   return { id: db.id, nickname: db.nickname, wechatId: db.wechat_id, groupId: db.group_id, createdAt: db.created_at };
 }
@@ -706,15 +745,13 @@ function saveLocalSettings(s) {
 
 // ----- Admin Password -----
 function getAdminPassword() {
-  if (useOnline) {
-    return window._adminPwd || DEFAULT_ADMIN_PASSWORD;
-  }
+  if (useOnline) return window._adminPwd || DEFAULT_ADMIN_PASSWORD;
   return getLocalSettings().adminPassword;
 }
 function setAdminPassword(newPwd) {
   window._adminPwd = newPwd;
-  if (useOnline && supabase) {
-    supabase.from('settings').upsert({ id: 'main', admin_password: newPwd });
+  if (useOnline) {
+    supabasePatch('settings', 'main', { admin_password: newPwd }).catch(() => {});
   } else {
     const s = getLocalSettings();
     s.adminPassword = newPwd;
@@ -724,113 +761,86 @@ function setAdminPassword(newPwd) {
 
 // ----- Current User (per-device, always localStorage) -----
 function getCurrentUser() {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch(e) {}
+  try { const raw = localStorage.getItem(USER_KEY); if (raw) return JSON.parse(raw); } catch(e) {}
   return null;
 }
-function setCurrentUser(user) {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
-function clearCurrentUser() {
-  localStorage.removeItem(USER_KEY);
-}
+function setCurrentUser(user) { localStorage.setItem(USER_KEY, JSON.stringify(user)); }
+function clearCurrentUser() { localStorage.removeItem(USER_KEY); }
 
-// ----- Data Store (in-memory, synced from Supabase or localStorage) -----
+// ----- Data Store -----
 let store = { participants: [], groups: [], phase: 'signup' };
 
 // ============================================================
-// Supabase Initialization
+// Supabase Init (zero-dependency, fetch-only)
 // ============================================================
-function loadScript(url, timeoutMs = 8000) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = url;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Script load failed'));
-    document.head.appendChild(script);
-    setTimeout(() => reject(new Error('Script load timeout')), timeoutMs);
-  });
-}
-
 async function initSupabase() {
   const cfg = SUPABASE_CONFIG;
   if (!cfg.url || cfg.url.includes('YOUR')) return false;
 
   try {
-    // Dynamically load Supabase SDK (non-blocking)
-    if (!window.supabase) {
-      try {
-        await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js', 5000);
-      } catch(e) {
-        // Try alternative CDN
-        try {
-          await loadScript('https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js', 5000);
-        } catch(e2) {
-          console.warn('Supabase SDK failed to load');
-          return false;
-        }
-      }
-    }
+    // Test connection
+    const res = await fetch(cfg.url + '/rest/v1/settings?id=eq.main&select=*', {
+      headers: { 'apikey': cfg.anonKey, 'Authorization': 'Bearer ' + cfg.anonKey }
+    });
+    if (!res.ok) return false;
 
-    supabase = window.supabase.createClient(cfg.url, cfg.anonKey);
+    const sData = await res.json();
+    if (sData.length > 0) {
+      store.phase = sData[0].phase || 'signup';
+      window._adminPwd = sData[0].admin_password || DEFAULT_ADMIN_PASSWORD;
+    } else {
+      // First time - create settings
+      await supabasePost('settings', { id: 'main', admin_password: DEFAULT_ADMIN_PASSWORD, phase: 'signup' });
+    }
 
     // Load initial data
-    const [pRes, gRes, sRes] = await Promise.all([
-      supabase.from('participants').select('*'),
-      supabase.from('groups').select('*').order('sort_order'),
-      supabase.from('settings').select('*').eq('id', 'main').maybeSingle()
+    const [pData, gData] = await Promise.all([
+      supabaseGet('participants'),
+      supabaseGet('groups', 'order=sort_order')
     ]);
+    store.participants = pData.map(mapParticipant);
+    store.groups = gData.map(mapGroup);
 
-    if (pRes.data) store.participants = pRes.data.map(mapParticipant);
-    if (gRes.data) store.groups = gRes.data.map(mapGroup);
-    if (sRes.data) {
-      store.phase = sRes.data.phase || 'signup';
-      window._adminPwd = sRes.data.admin_password || DEFAULT_ADMIN_PASSWORD;
-    }
-
-    // Real-time subscriptions
-    supabase.channel('participants-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, async () => {
-        const { data } = await supabase.from('participants').select('*');
-        if (data) store.participants = data.map(mapParticipant);
-        refreshUI();
-      }).subscribe();
-
-    supabase.channel('groups-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, async () => {
-        const { data } = await supabase.from('groups').select('*').order('sort_order');
-        if (data) store.groups = data.map(mapGroup);
-        refreshUI();
-      }).subscribe();
-
-    supabase.channel('settings-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, async (payload) => {
-        const newData = payload.new;
-        if (newData) {
-          if (newData.phase !== undefined) store.phase = newData.phase;
-          if (newData.admin_password !== undefined) window._adminPwd = newData.admin_password;
-          refreshUI();
-        }
-      }).subscribe();
-
+    // Start polling for real-time updates
+    startPolling();
     return true;
   } catch(e) {
-    console.warn('Supabase init failed, using localStorage:', e.message);
+    console.warn('Supabase init failed:', e.message);
     return false;
   }
 }
 
-// ============================================================
-// Data Operations (abstracted for both modes)
-// ============================================================
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    try {
+      const [pData, gData, sRes] = await Promise.all([
+        supabaseGet('participants'),
+        supabaseGet('groups', 'order=sort_order'),
+        fetch(SUPABASE_CONFIG.url + '/rest/v1/settings?id=eq.main&select=*', {
+          headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey }
+        })
+      ]);
+      store.participants = pData.map(mapParticipant);
+      store.groups = gData.map(mapGroup);
+      if (sRes.ok) {
+        const sData = await sRes.json();
+        if (sData.length > 0) {
+          store.phase = sData[0].phase;
+          window._adminPwd = sData[0].admin_password;
+        }
+      }
+      refreshUI();
+    } catch(e) { /* silent */ }
+  }, 3000);
+}
 
+// ============================================================
+// Data Operations
+// ============================================================
 async function addParticipant(data) {
   if (useOnline) {
-    await supabase.from('participants').insert({
-      nickname: data.nickname, wechat_id: data.wechatId, group_id: null
-    });
+    await supabasePost('participants', { nickname: data.nickname, wechat_id: data.wechatId, group_id: null });
   } else {
     const p = { id: genId(), nickname: data.nickname, wechatId: data.wechatId, groupId: null, createdAt: Date.now() };
     store.participants.push(p);
@@ -841,7 +851,7 @@ async function addParticipant(data) {
 
 async function updateParticipantGroup(participantId, groupId) {
   if (useOnline) {
-    await supabase.from('participants').update({ group_id: groupId }).eq('id', participantId);
+    await supabasePatch('participants', participantId, { group_id: groupId });
   } else {
     const p = store.participants.find(x => x.id === participantId);
     if (p) { p.groupId = groupId; saveLocalStore(store); }
@@ -850,8 +860,13 @@ async function updateParticipantGroup(participantId, groupId) {
 
 async function findParticipantByWechat(wechatId) {
   if (useOnline) {
-    const { data } = await supabase.from('participants').select('*').eq('wechat_id', wechatId).maybeSingle();
-    return data ? mapParticipant(data) : null;
+    const res = await fetch(
+      SUPABASE_CONFIG.url + '/rest/v1/participants?select=*&wechat_id=eq.' + encodeURIComponent(wechatId),
+      { headers: supabaseHeaders() }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.length > 0 ? mapParticipant(data[0]) : null;
   } else {
     return store.participants.find(p => p.wechatId === wechatId) || null;
   }
@@ -859,7 +874,7 @@ async function findParticipantByWechat(wechatId) {
 
 async function removeParticipantDb(participantId) {
   if (useOnline) {
-    await supabase.from('participants').delete().eq('id', participantId);
+    await supabaseDelete('participants', participantId);
   } else {
     store.participants = store.participants.filter(x => x.id !== participantId);
     store.groups.forEach(g => { if (g.leaderId === participantId) g.leaderId = null; });
@@ -869,12 +884,11 @@ async function removeParticipantDb(participantId) {
 
 async function addGroupDb() {
   const count = store.groups.length + 1;
-  const group = { name: `第${count}组`, theme: '', leader_id: null, max_size: 7, sort_order: store.groups.length };
   if (useOnline) {
-    await supabase.from('groups').insert(group);
+    await supabasePost('groups', { name: '第' + count + '组', theme: '', leader_id: null, max_size: 7, sort_order: store.groups.length });
   } else {
-    group.id = genId();
-    store.groups.push({ id: group.id, name: group.name, theme: group.theme, leaderId: null, maxSize: 7, order: group.sort_order });
+    const g = { id: genId(), name: '第' + count + '组', theme: '', leaderId: null, maxSize: 7, order: store.groups.length };
+    store.groups.push(g);
     saveLocalStore(store);
   }
 }
@@ -887,7 +901,7 @@ async function updateGroupDb(groupId, data) {
     if (data.leaderId !== undefined) dbData.leader_id = data.leaderId;
     if (data.maxSize !== undefined) dbData.max_size = data.maxSize;
     if (data.order !== undefined) dbData.sort_order = data.order;
-    await supabase.from('groups').update(dbData).eq('id', groupId);
+    await supabasePatch('groups', groupId, dbData);
   } else {
     const g = store.groups.find(x => x.id === groupId);
     if (g) { Object.assign(g, data); saveLocalStore(store); }
@@ -896,8 +910,12 @@ async function updateGroupDb(groupId, data) {
 
 async function deleteGroupDb(groupId) {
   if (useOnline) {
-    await supabase.from('participants').update({ group_id: null }).eq('group_id', groupId);
-    await supabase.from('groups').delete().eq('id', groupId);
+    // Reset members first, then delete group
+    const members = store.participants.filter(p => p.groupId === groupId);
+    for (const m of members) {
+      await supabasePatch('participants', m.id, { group_id: null });
+    }
+    await supabaseDelete('groups', groupId);
   } else {
     store.participants.forEach(p => { if (p.groupId === groupId) p.groupId = null; });
     store.groups = store.groups.filter(g => g.id !== groupId);
@@ -908,7 +926,7 @@ async function deleteGroupDb(groupId) {
 async function setPhaseDb(phase) {
   store.phase = phase;
   if (useOnline) {
-    await supabase.from('settings').upsert({ id: 'main', phase: phase });
+    await supabasePatch('settings', 'main', { phase: phase });
   } else {
     saveLocalStore(store);
   }
@@ -916,9 +934,13 @@ async function setPhaseDb(phase) {
 
 async function resetAllDb() {
   if (useOnline) {
-    await supabase.from('participants').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('groups').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('settings').delete().eq('id', 'main');
+    for (const p of store.participants) {
+      await supabaseDelete('participants', p.id);
+    }
+    for (const g of store.groups) {
+      await supabaseDelete('groups', g.id);
+    }
+    await supabasePatch('settings', 'main', { phase: 'signup', admin_password: DEFAULT_ADMIN_PASSWORD });
     store = { participants: [], groups: [], phase: 'signup' };
   } else {
     localStorage.removeItem('group_signup_data');
@@ -1145,7 +1167,7 @@ async function doSignin() {
   if (existing) {
     // Update existing
     if (useOnline) {
-      await supabase.from('participants').update({ nickname: nickname }).eq('id', existing.id);
+      await supabasePatch('participants', existing.id, { nickname: nickname });
     } else {
       const p = store.participants.find(x => x.id === existing.id);
       if (p) { p.nickname = nickname; saveLocalStore(store); }
@@ -1304,9 +1326,9 @@ async function removeParticipant(participantId) {
   if (useOnline) {
     const groupsWithLeader = store.groups.filter(g => g.leaderId === participantId);
     for (const g of groupsWithLeader) {
-      await supabase.from('groups').update({ leader_id: null }).eq('id', g.id);
+      await supabasePatch('groups', g.id, { leader_id: null });
     }
-    await supabase.from('participants').delete().eq('id', participantId);
+    await supabaseDelete('participants', participantId);
   } else {
     store.participants = store.participants.filter(x => x.id !== participantId);
     store.groups.forEach(g => { if (g.leaderId === participantId) g.leaderId = null; });

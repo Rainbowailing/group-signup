@@ -9,34 +9,40 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --primary: #FF6B6B;
-  --primary-dark: #E55A5A;
-  --bg: #FFF5F5;
+  --primary: #92400E;
+  --primary-light: #B45309;
+  --primary-dark: #78350F;
+  --accent: #D97706;
+  --bg: #FFFDF7;
   --card-bg: #FFFFFF;
-  --text: #2D3436;
-  --text-light: #636E72;
-  --text-lighter: #B2BEC3;
-  --shadow: 0 2px 16px rgba(255,107,107,0.08);
-  --shadow-lg: 0 8px 32px rgba(255,107,107,0.12);
-  --radius: 20px;
-  --radius-sm: 14px;
-  --font-xl: 28px;
-  --font-lg: 20px;
-  --font-md: 16px;
-  --font-sm: 14px;
-  --font-xs: 12px;
+  --text: #1C1917;
+  --text-light: #57534E;
+  --text-lighter: #A8A29E;
+  --border: #E7E5E4;
+  --border-light: #F5F5F4;
+  --shadow: 0 1px 2px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lg: 0 2px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03);
+  --shadow-card: 0 1px 2px rgba(28,25,23,0.03), 0 3px 12px rgba(28,25,23,0.04);
+  --radius: 12px;
+  --radius-sm: 10px;
+  --font-xl: 26px;
+  --font-lg: 18px;
+  --font-md: 15px;
+  --font-sm: 13px;
+  --font-xs: 11px;
 }
 
 /* ===== Base ===== */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: linear-gradient(160deg, #FFF5F5 0%, #FFE8E8 30%, #FFE0F0 60%, #FFF0F5 100%);
+  background: var(--bg);
   min-height: 100vh;
   color: var(--text);
   display: flex;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.01em;
 }
 
 .container {
@@ -64,10 +70,7 @@ body {
 .header h1 {
   font-size: var(--font-xl);
   font-weight: 700;
-  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text);
 }
 .header p {
   font-size: var(--font-sm);
@@ -89,6 +92,7 @@ body {
   font-weight: 800;
   color: var(--primary);
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 .counter-label {
   font-size: var(--font-sm);
@@ -97,14 +101,14 @@ body {
 }
 .progress-bar {
   margin-top: 14px;
-  height: 8px;
-  background: #FFE8E8;
+  height: 6px;
+  background: #E2E8F0;
   border-radius: 100px;
   overflow: hidden;
 }
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #FF8E8E, #FF6B6B);
+  background: linear-gradient(90deg, #D97706, #92400E);
   border-radius: 100px;
   transition: width 0.5s ease;
 }
@@ -136,18 +140,19 @@ body {
 .form-group input {
   width: 100%;
   height: 50px;
-  border: 2px solid #F0E0E0;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0 16px;
   font-size: var(--font-md);
   color: var(--text);
-  background: #FFFAFA;
-  transition: border-color 0.2s;
+  background: var(--card-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
   -webkit-appearance: none;
 }
 .form-group input:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(146,64,14,0.06);
   background: #FFF;
 }
 .form-group input::placeholder {
@@ -156,33 +161,33 @@ body {
 .btn {
   display: block;
   width: 100%;
-  height: 52px;
+  height: 50px;
   border: none;
   border-radius: var(--radius-sm);
   font-size: var(--font-md);
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: all 0.15s;
   -webkit-appearance: none;
 }
 .btn:active {
   transform: scale(0.97);
 }
 .btn-primary {
-  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  background: var(--primary);
   color: #FFF;
-  box-shadow: 0 4px 16px rgba(255,107,107,0.3);
+  box-shadow: 0 2px 8px rgba(146,64,14,0.12);
 }
 .btn-outline {
-  background: #FFF;
+  background: var(--card-bg);
   color: var(--primary);
-  border: 2px solid var(--primary);
+  border: 1.5px solid var(--border);
 }
 .btn-sm {
-  height: 38px;
+  height: 36px;
   width: auto;
   display: inline-block;
-  padding: 0 16px;
+  padding: 0 14px;
   font-size: var(--font-sm);
 }
 
@@ -223,26 +228,27 @@ body {
   background: var(--card-bg);
   border-radius: var(--radius);
   padding: 20px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-card);
   margin-bottom: 14px;
   position: relative;
-  border: 3px solid transparent;
-  transition: border-color 0.2s, transform 0.15s;
+  border: 1.5px solid var(--border);
+  transition: all 0.2s;
   cursor: pointer;
 }
 .group-card:active {
   transform: scale(0.98);
 }
 .group-card.full {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: default;
 }
 .group-card.full:active {
   transform: none;
 }
 .group-card.selected {
-  border-color: #4ECB71;
-  background: #F5FFF7;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(146,64,14,0.06);
+  background: #FFFDF7;
 }
 .group-card-header {
   display: flex;
@@ -260,8 +266,8 @@ body {
   padding: 4px 12px;
   border-radius: 100px;
 }
-.capacity-open { background: #E8F5E9; color: #2E7D32; }
-.capacity-full { background: #FFE8E8; color: #C62828; }
+.capacity-open { background: #ECFDF5; color: #065F46; }
+.capacity-full { background: #FEF2F2; color: #991B1B; }
 .group-leader {
   font-size: var(--font-sm);
   color: var(--text-light);
@@ -277,14 +283,14 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #FFF0F5;
+  background: #F1F5F9;
   padding: 4px 10px;
   border-radius: 100px;
   font-size: var(--font-xs);
   color: var(--text);
 }
 .person-tag.leader {
-  background: #FFE8E8;
+  background: #FEF3C7;
   font-weight: 600;
 }
 
@@ -295,7 +301,8 @@ body {
   padding: 24px 20px;
   box-shadow: var(--shadow-lg);
   margin-bottom: 20px;
-  border: 3px solid #4ECB71;
+  border: 1.5px solid var(--primary);
+  background: linear-gradient(180deg, #FFFDF7 0%, #FFFFFF 100%);
 }
 .my-group-header {
   text-align: center;
@@ -309,7 +316,7 @@ body {
 .my-group-header h3 {
   font-size: var(--font-lg);
   font-weight: 700;
-  color: #2E7D32;
+  color: var(--primary-dark);
 }
 .my-group-theme {
   font-size: var(--font-md);
@@ -317,7 +324,7 @@ body {
   margin-top: 4px;
 }
 .member-list {
-  border-top: 1px solid #F0E0E0;
+  border-top: 1px solid var(--border);
   padding-top: 16px;
 }
 .member-item {
@@ -325,7 +332,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid #FFF0F5;
+  border-bottom: 1px solid var(--border-light);
 }
 .member-item:last-child {
   border-bottom: none;
@@ -361,8 +368,8 @@ body {
   border-radius: 100px;
   font-weight: 600;
 }
-.badge-leader { background: #FFE8E8; color: #C62828; }
-.badge-you { background: #E8F5E9; color: #2E7D32; }
+.badge-leader { background: #FEF3C7; color: #92400E; }
+.badge-you { background: #ECFDF5; color: #065F46; }
 
 /* ===== Admin Panel ===== */
 .admin-panel {
@@ -403,9 +410,9 @@ body {
   flex: 1;
   min-width: 100px;
   height: 44px;
-  border: 2px solid #F0E0E0;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  background: #FFF;
+  background: var(--card-bg);
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
@@ -413,15 +420,15 @@ body {
 }
 .phase-btn.active {
   border-color: var(--primary);
-  background: #FFF5F5;
+  background: #FFFDF7;
   color: var(--primary);
 }
 .admin-group-item {
-  background: #FFFAFA;
+  background: #FFFDF7;
   border-radius: var(--radius-sm);
   padding: 16px;
   margin-bottom: 12px;
-  border: 1px solid #F0E0E0;
+  border: 1px solid var(--border);
 }
 .admin-group-row {
   display: flex;
@@ -443,7 +450,7 @@ body {
 .admin-group-row select {
   flex: 1;
   height: 38px;
-  border: 1px solid #E8D8D8;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0 10px;
   font-size: var(--font-sm);
@@ -504,7 +511,7 @@ body {
 .modal input {
   width: 100%;
   height: 48px;
-  border: 2px solid #F0E0E0;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0 14px;
   font-size: var(--font-md);
@@ -522,7 +529,7 @@ body {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #2D3436;
+  background: #1E293B;
   color: #FFF;
   padding: 12px 24px;
   border-radius: 100px;
@@ -568,11 +575,12 @@ body {
         <input type="text" id="input-nickname" placeholder="怎么称呼你？" maxlength="20" autocomplete="off">
       </div>
       <div class="form-group">
-        <label>微信号</label>
+        <label>微信号或手机号</label>
         <input type="text" id="input-wechat" placeholder="方便同组伙伴联系你" maxlength="40" autocomplete="off">
       </div>
       <button class="btn btn-primary" id="btn-signin">提交签到</button>
-      <div style="text-align:center;margin-top:6px">
+      <button class="btn btn-outline btn-sm hidden" id="btn-cancel-edit" style="margin-top:8px;">取消修改</button>
+      <div style="text-align:center;margin-top:6px" id="signin-hint">
         <span style="font-size:var(--font-xs);color:var(--text-lighter)">签到后等待管理员开放选组</span>
       </div>
     </div>
@@ -597,6 +605,8 @@ body {
 
   <!-- ===== Footer ===== -->
   <div class="footer">
+    <a id="link-leader" class="hidden">组长面板</a>
+    <span class="hidden" id="footer-sep" style="color:var(--text-lighter);margin:0 8px;">·</span>
     <a id="link-admin">管理入口</a>
   </div>
 
@@ -611,7 +621,20 @@ body {
     </div>
   </div>
 
-  <!-- ===== Admin Panel ===== -->
+  <!-- ===== Leader Panel ===== -->
+  <div class="admin-panel" id="leader-panel">
+    <div class="admin-section">
+      <div class="admin-header">
+        <h2>👑 组长面板</h2>
+        <button class="btn btn-outline btn-sm" id="btn-leader-close">返回</button>
+      </div>
+      <p style="font-size:var(--font-sm);color:var(--text-light);margin-bottom:12px;" id="leader-group-info"></p>
+      <h3>入组申请</h3>
+      <div id="leader-requests"></div>
+    </div>
+  </div>
+
+<!-- ===== Admin Panel ===== -->
   <div class="admin-panel" id="admin-panel">
     <!-- Phase Control -->
     <div class="admin-section">
@@ -727,7 +750,7 @@ function getLocalStore() {
     const raw = localStorage.getItem('group_signup_data');
     if (raw) return JSON.parse(raw);
   } catch(e) {}
-  return { participants: [], groups: [], phase: 'signup' };
+  return { participants: [], groups: [], requests: [], phase: 'signup' };
 }
 function saveLocalStore(s) {
   localStorage.setItem('group_signup_data', JSON.stringify(s));
@@ -768,7 +791,7 @@ function setCurrentUser(user) { localStorage.setItem(USER_KEY, JSON.stringify(us
 function clearCurrentUser() { localStorage.removeItem(USER_KEY); }
 
 // ----- Data Store -----
-let store = { participants: [], groups: [], phase: 'signup' };
+let store = { participants: [], groups: [], requests: [], phase: 'signup' };
 
 // ============================================================
 // Supabase Init (zero-dependency, fetch-only)
@@ -793,13 +816,20 @@ async function initSupabase() {
       await supabasePost('settings', { id: 'main', admin_password: DEFAULT_ADMIN_PASSWORD, phase: 'signup' });
     }
 
-    // Load initial data
+    // Load initial data (requests may not exist yet)
     const [pData, gData] = await Promise.all([
       supabaseGet('participants'),
       supabaseGet('groups', 'order=sort_order')
     ]);
     store.participants = pData.map(mapParticipant);
     store.groups = gData.map(mapGroup);
+    // Cache to localStorage as backup
+    saveLocalStore(store);
+    // Try loading requests, but don't fail if table doesn't exist
+    try {
+      const rData = await supabaseGet('requests');
+      store.requests = (rData || []).map(r => ({ id: r.id, participantId: r.participant_id, groupId: r.group_id, status: r.status, createdAt: r.created_at }));
+    } catch(e) { store.requests = []; }
 
     // Start polling for real-time updates
     startPolling();
@@ -823,6 +853,10 @@ function startPolling() {
       ]);
       store.participants = pData.map(mapParticipant);
       store.groups = gData.map(mapGroup);
+      try {
+        const rData = await supabaseGet('requests');
+        store.requests = (rData || []).map(r => ({ id: r.id, participantId: r.participant_id, groupId: r.group_id, status: r.status, createdAt: r.created_at }));
+      } catch(e) { /* table may not exist yet */ }
       if (sRes.ok) {
         const sData = await sRes.json();
         if (sData.length > 0) {
@@ -830,6 +864,7 @@ function startPolling() {
           window._adminPwd = sData[0].admin_password;
         }
       }
+      saveLocalStore(store);
       refreshUI();
     } catch(e) { /* silent */ }
   }, 3000);
@@ -884,11 +919,15 @@ async function removeParticipantDb(participantId) {
 
 async function addGroupDb() {
   const count = store.groups.length + 1;
+  const name = '第' + count + '组';
+
   if (useOnline) {
-    await supabasePost('groups', { name: '第' + count + '组', theme: '', leader_id: null, max_size: 7, sort_order: store.groups.length });
+    await supabasePost('groups', { name: name, theme: '', leader_id: null, max_size: 7, sort_order: store.groups.length });
+    // Immediately reload to get the real ID
+    const data = await supabaseGet('groups', 'order=sort_order');
+    store.groups = data.map(mapGroup);
   } else {
-    const g = { id: genId(), name: '第' + count + '组', theme: '', leaderId: null, maxSize: 7, order: store.groups.length };
-    store.groups.push(g);
+    store.groups.push({ id: genId(), name: name, theme: '', leaderId: null, maxSize: 7, order: store.groups.length });
     saveLocalStore(store);
   }
 }
@@ -932,19 +971,44 @@ async function setPhaseDb(phase) {
   }
 }
 
+// ----- Requests -----
+async function addRequestDb(participantId, groupId) {
+  if (useOnline) {
+    await supabasePost('requests', { participant_id: participantId, group_id: groupId, status: 'pending' });
+  } else {
+    store.requests.push({ id: genId(), participantId, groupId, status: 'pending', createdAt: Date.now() });
+    saveLocalStore(store);
+  }
+}
+
+async function approveRequestDb(requestId) {
+  if (useOnline) {
+    await supabasePatch('requests', requestId, { status: 'approved' });
+  } else {
+    const r = store.requests.find(x => x.id === requestId);
+    if (r) { r.status = 'approved'; saveLocalStore(store); }
+  }
+}
+
+async function rejectRequestDb(requestId) {
+  if (useOnline) {
+    await supabasePatch('requests', requestId, { status: 'rejected' });
+  } else {
+    store.requests = store.requests.filter(x => x.id !== requestId);
+    saveLocalStore(store);
+  }
+}
+
 async function resetAllDb() {
   if (useOnline) {
-    for (const p of store.participants) {
-      await supabaseDelete('participants', p.id);
-    }
-    for (const g of store.groups) {
-      await supabaseDelete('groups', g.id);
-    }
+    for (const p of store.participants) { await supabaseDelete('participants', p.id); }
+    for (const g of store.groups) { await supabaseDelete('groups', g.id); }
+    for (const r of store.requests) { await supabaseDelete('requests', r.id); }
     await supabasePatch('settings', 'main', { phase: 'signup', admin_password: DEFAULT_ADMIN_PASSWORD });
-    store = { participants: [], groups: [], phase: 'signup' };
+    store = { participants: [], groups: [], requests: [], phase: 'signup' };
   } else {
     localStorage.removeItem('group_signup_data');
-    store = { participants: [], groups: [], phase: 'signup' };
+    store = { participants: [], groups: [], requests: [], phase: 'signup' };
   }
   clearCurrentUser();
 }
@@ -970,9 +1034,9 @@ function showToast(msg, duration = 2000) {
 
 function getGroupColor(i) {
   const colors = [
-    '#FF8A80','#82B1FF','#B9F6CA','#B388FF','#FFD180',
-    '#A7FFEB','#F8BBD0','#80D8FF','#CCFF90','#FF80AB',
-    '#84FFFF','#FFE57F'
+    '#92400E','#B45309','#A16207','#854D0E','#713F12',
+    '#9A3412','#7C2D12','#57534E','#44403C','#78716C',
+    '#CA8A04','#A16207'
   ];
   return colors[i % colors.length];
 }
@@ -1056,14 +1120,14 @@ function renderSelection() {
     const isFull = memberCount >= g.maxSize;
     const isMyGroup = currentUser.groupId === g.id;
     const members = store.participants.filter(p => p.groupId === g.id);
-    const leader = members.find(p => p.id === g.leaderId);
+    const leader = store.participants.find(p => p.id === g.leaderId);
 
     html += `<div class="group-card ${isFull ? 'full' : ''} ${isMyGroup ? 'selected' : ''}" data-group-id="${g.id}">`;
     html += `<div class="group-card-header">`;
     html += `<span class="group-theme">${getGroupEmoji(i)} ${g.theme || g.name}</span>`;
     html += `<span class="group-capacity ${isFull ? 'capacity-full' : 'capacity-open'}">${memberCount}/${g.maxSize} ${isFull ? '已满' : ''}</span>`;
     html += `</div>`;
-    html += `<div class="group-leader">👑 组长：${leader ? leader.nickname : (g.leaderId ? '未知' : '待定')}</div>`;
+    html += `<div class="group-leader">👑 组长：${leader ? leader.nickname : (g.leaderId ? '(已指定)' : '待定')}</div>`;
 
     if (members.length > 0) {
       html += `<div class="group-people">`;
@@ -1078,7 +1142,13 @@ function renderSelection() {
       if (isMyGroup) {
         html += `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();leaveGroup()">退出此组</button>`;
       } else if (!isFull) {
-        html += `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();joinGroup('${g.id}')">加入这个组</button>`;
+        const hasReq = store.requests.some(r => r.participantId === currentUser.id && r.groupId === g.id && r.status === 'pending');
+        if (hasReq) {
+          html += `<button class="btn btn-outline btn-sm" disabled style="opacity:0.6;">等待组长审批...</button>`;
+        } else {
+          const btnLabel = g.leaderId ? '申请加入' : '加入这个组';
+          html += `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();joinGroup('${g.id}')">${btnLabel}</button>`;
+        }
       }
     }
     html += `</div>`;
@@ -1106,7 +1176,7 @@ function renderMyGroup() {
   }
 
   const members = store.participants.filter(p => p.groupId === group.id);
-  const leader = members.find(m => m.id === group.leaderId);
+  const leader = store.participants.find(m => m.id === group.leaderId);
 
   let html = '<div class="my-group-card">';
   html += '<div class="my-group-header">';
@@ -1126,7 +1196,7 @@ function renderMyGroup() {
     html += `<div class="member-avatar" style="background:${bgColor}">${getInitial(m.nickname)}</div>`;
     html += '<div>';
     html += `<div class="member-name">${m.nickname} ${isYou ? '(你)' : ''}</div>`;
-    html += `<div class="member-wechat">微信：${m.wechatId}</div>`;
+    html += `<div class="member-wechat">联系方式：${m.wechatId}</div>`;
     html += '</div>';
     html += '</div>';
     if (isLeader) {
@@ -1138,12 +1208,19 @@ function renderMyGroup() {
   });
   html += '</div>';
 
+  html += `<button class="btn btn-outline btn-sm" id="btn-edit-info" style="margin-top:12px;width:100%;">✏️ 编辑我的信息</button>`;
   if (store.phase !== 'done') {
-    html += `<button class="btn btn-outline btn-sm" id="btn-leave-group" style="margin-top:16px;width:100%;">退出此组，换到其他组</button>`;
+    html += `<button class="btn btn-outline btn-sm" id="btn-leave-group" style="margin-top:8px;width:100%;">退出此组，换到其他组</button>`;
   }
   html += '</div>';
 
   container.innerHTML = html;
+
+  // Bind edit button
+  const editBtn = document.getElementById('btn-edit-info');
+  if (editBtn) {
+    editBtn.addEventListener('click', enterEditMode);
+  }
 
   // Bind leave button
   const leaveBtn = document.getElementById('btn-leave-group');
@@ -1158,39 +1235,89 @@ function renderMyGroup() {
 async function doSignin() {
   const nickname = document.getElementById('input-nickname').value.trim();
   const wechatId = document.getElementById('input-wechat').value.trim();
+  const btn = document.getElementById('btn-signin');
+  const isEditing = btn.dataset.editing === 'true';
+  const currentUser = getCurrentUser();
 
   if (!nickname) { showToast('请输入昵称'); return; }
-  if (!wechatId) { showToast('请输入微信号'); return; }
+  if (!wechatId) { showToast('请输入微信号或手机号'); return; }
 
-  // Check duplicate by wechatId
-  const existing = await findParticipantByWechat(wechatId);
-  if (existing) {
-    // Update existing
+  if (isEditing && currentUser) {
+    // Update existing participant
+    const groupId = currentUser.groupId;
     if (useOnline) {
-      await supabasePatch('participants', existing.id, { nickname: nickname });
+      await supabasePatch('participants', currentUser.id, { nickname: nickname, wechat_id: wechatId });
     } else {
-      const p = store.participants.find(x => x.id === existing.id);
-      if (p) { p.nickname = nickname; saveLocalStore(store); }
+      const p = store.participants.find(x => x.id === currentUser.id);
+      if (p) { p.nickname = nickname; p.wechatId = wechatId; saveLocalStore(store); }
     }
-    setCurrentUser({ id: existing.id, nickname, wechatId, groupId: existing.groupId || null });
+    setCurrentUser({ id: currentUser.id, nickname, wechatId, groupId: groupId });
+    btn.textContent = '提交签到';
+    btn.dataset.editing = 'false';
+    document.getElementById('input-nickname').value = '';
+    document.getElementById('input-wechat').value = '';
+    document.getElementById('btn-cancel-edit').classList.add('hidden');
+    document.getElementById('signin-hint').classList.remove('hidden');
+    showToast('信息已更新 ✅');
   } else {
-    await addParticipant({ nickname, wechatId });
-    // Re-find the newly created participant to get its ID
-    const created = await findParticipantByWechat(wechatId);
-    if (created) {
-      setCurrentUser({ id: created.id, nickname, wechatId, groupId: null });
+    // Check duplicate by wechatId (only for new signups)
+    const existing = await findParticipantByWechat(wechatId);
+    if (existing && (!currentUser || existing.id !== currentUser.id)) {
+      // Update existing
+      if (useOnline) {
+        await supabasePatch('participants', existing.id, { nickname: nickname });
+      } else {
+        const p = store.participants.find(x => x.id === existing.id);
+        if (p) { p.nickname = nickname; saveLocalStore(store); }
+      }
+      setCurrentUser({ id: existing.id, nickname, wechatId, groupId: existing.groupId || null });
+    } else {
+      await addParticipant({ nickname, wechatId });
+      const created = await findParticipantByWechat(wechatId);
+      if (created) {
+        setCurrentUser({ id: created.id, nickname, wechatId, groupId: null });
+      }
     }
+
+    document.getElementById('input-nickname').value = '';
+    document.getElementById('input-wechat').value = '';
+    showToast('签到成功！✅');
   }
 
+  refreshUI();
+}
+
+function enterEditMode() {
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    document.getElementById('input-nickname').value = currentUser.nickname || '';
+    document.getElementById('input-wechat').value = currentUser.wechatId || '';
+  }
+  const btn = document.getElementById('btn-signin');
+  btn.textContent = '保存修改';
+  btn.dataset.editing = 'true';
+  document.getElementById('btn-cancel-edit').classList.remove('hidden');
+  document.getElementById('signin-hint').classList.add('hidden');
+  document.getElementById('signin-form-card').classList.remove('hidden');
+  document.getElementById('signin-done-card').classList.add('hidden');
+  document.getElementById('view-selection').classList.add('hidden');
+  document.getElementById('view-mygroup').classList.add('hidden');
+  window.scrollTo(0, 0);
+}
+
+function cancelEdit() {
   document.getElementById('input-nickname').value = '';
   document.getElementById('input-wechat').value = '';
-  showToast('签到成功！✅');
+  const btn = document.getElementById('btn-signin');
+  btn.textContent = '提交签到';
+  btn.dataset.editing = 'false';
+  document.getElementById('btn-cancel-edit').classList.add('hidden');
+  document.getElementById('signin-hint').classList.remove('hidden');
   refreshUI();
 }
 
 function doResign() {
-  clearCurrentUser();
-  refreshUI();
+  enterEditMode();
 }
 
 async function joinGroup(groupId) {
@@ -1203,10 +1330,21 @@ async function joinGroup(groupId) {
   const memberCount = store.participants.filter(p => p.groupId === groupId).length;
   if (memberCount >= group.maxSize) { showToast('该小组已满员'); return; }
 
-  await updateParticipantGroup(currentUser.id, groupId);
-  currentUser.groupId = groupId;
-  setCurrentUser(currentUser);
-  showToast(`已加入 ${group.theme || group.name}！`);
+  // Check for existing pending request
+  const existingReq = store.requests.find(r => r.participantId === currentUser.id && r.groupId === groupId && r.status === 'pending');
+  if (existingReq) { showToast('已申请，等待组长审批中...'); return; }
+
+  if (group.leaderId) {
+    // Group has leader → create approval request
+    await addRequestDb(currentUser.id, groupId);
+    showToast('已发送入组申请，等待组长审批 ✋');
+  } else {
+    // No leader → join immediately
+    await updateParticipantGroup(currentUser.id, groupId);
+    currentUser.groupId = groupId;
+    setCurrentUser(currentUser);
+    showToast(`已加入 ${group.theme || group.name}！`);
+  }
   refreshUI();
 }
 
@@ -1231,11 +1369,21 @@ function adminLogin() {
     document.getElementById('admin-panel').classList.add('active');
     document.getElementById('input-admin-password').value = '';
     document.getElementById('link-admin').classList.add('hidden');
+    // Remember login
+    localStorage.setItem('group_signup_admin_session', '1');
     renderAdmin();
     showToast('欢迎管理员 👋');
   } else {
     showToast('密码错误');
   }
+}
+
+function adminLogout() {
+  document.getElementById('admin-panel').classList.remove('active');
+  document.getElementById('link-admin').classList.remove('hidden');
+  // Clear session
+  localStorage.removeItem('group_signup_admin_session');
+  refreshUI();
 }
 
 function changeAdminPassword() {
@@ -1273,49 +1421,97 @@ async function deleteGroup(groupId) {
   refreshUI();
 }
 
-function updateGroupField(groupId, field, value) {
-  const data = {};
-  if (field === 'maxSize') {
-    data.maxSize = Math.max(2, Math.min(20, parseInt(value) || 7));
-  } else if (field === 'leaderId') {
-    data.leaderId = value || null;
-  } else {
-    data[field] = value;
+function saveGroup(groupId) {
+  const theme = document.getElementById('theme-' + groupId);
+  const leader = document.getElementById('leader-' + groupId);
+  const maxsize = document.getElementById('maxsize-' + groupId);
+
+  if (!theme || !leader || !maxsize) {
+    showToast('找不到该小组，请刷新页面');
+    return;
   }
-  updateGroupDb(groupId, data).then(() => { refreshUI(); });
+
+  const data = {
+    theme: theme.value.trim(),
+    leaderId: leader.value || null,
+    maxSize: Math.max(2, Math.min(20, parseInt(maxsize.value) || 7)),
+  };
+
+  const oldGroup = store.groups.find(x => x.id === groupId);
+  const oldLeaderId = oldGroup ? oldGroup.leaderId : null;
+
+  updateGroupDb(groupId, data).then(async () => {
+    // Update local store immediately
+    const g = store.groups.find(x => x.id === groupId);
+    if (g) Object.assign(g, data);
+
+    // If leader changed to a new person, auto-add them to the group
+    if (data.leaderId && data.leaderId !== oldLeaderId) {
+      await updateParticipantGroup(data.leaderId, groupId);
+    }
+
+    showToast('已保存 ✅', 1500);
+    refreshUI();
+  });
 }
 
 async function resetAll() {
   if (!confirm('⚠️ 确定清空全部数据吗？此操作不可恢复！')) return;
   if (!confirm('再次确认：清空所有签到记录和小组设置？')) return;
   await resetAllDb();
-  store = { participants: [], groups: [], phase: 'signup' };
+  store = { participants: [], groups: [], requests: [], phase: 'signup' };
   showToast('已清空全部数据');
   refreshUI();
   renderAdmin();
 }
 
 function exportData() {
-  const data = {
-    participants: store.participants,
-    groups: store.groups.map(g => ({
-      ...g,
-      members: store.participants.filter(p => p.groupId === g.id).map(p => ({
-        nickname: p.nickname,
-        wechatId: p.wechatId,
-        isLeader: p.id === g.leaderId,
-      })),
-    })),
-  };
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
+  // Build CSV with BOM for Excel Chinese support
+  let csv = '﻿组名,主题,组长,昵称,联系方式,角色\n';
+
+  // Sort groups by order
+  const sortedGroups = [...store.groups].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  sortedGroups.forEach(g => {
+    const members = store.participants.filter(p => p.groupId === g.id);
+    const leader = store.participants.find(p => p.id === g.leaderId);
+    const leaderName = leader ? leader.nickname : '待定';
+
+    if (members.length === 0) {
+      csv += `${csvEscape(g.name)},${csvEscape(g.theme || '未设置')},${csvEscape(leaderName)},,,\n`;
+    } else {
+      members.forEach(p => {
+        const isLeader = p.id === g.leaderId;
+        const role = isLeader ? '组长' : '组员';
+        csv += `${csvEscape(g.name)},${csvEscape(g.theme || '未设置')},${csvEscape(leaderName)},${csvEscape(p.nickname)},${csvEscape(p.wechatId)},${role}\n`;
+      });
+    }
+  });
+
+  // Unassigned participants
+  const unassigned = store.participants.filter(p => !p.groupId);
+  if (unassigned.length > 0) {
+    unassigned.forEach(p => {
+      csv += `未分配,,,${csvEscape(p.nickname)},${csvEscape(p.wechatId)},待定\n`;
+    });
+  }
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'group-data-' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = '小组分组结果-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   URL.revokeObjectURL(url);
-  showToast('数据已导出');
+  showToast('CSV 已导出');
+}
+
+function csvEscape(str) {
+  str = String(str || '');
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
 }
 
 async function removeParticipant(participantId) {
@@ -1340,8 +1536,89 @@ async function removeParticipant(participantId) {
 }
 
 // ============================================================
-// Render: Admin Panel
+// Leader Panel
 // ============================================================
+function getLeaderGroups() {
+  const currentUser = getCurrentUser();
+  if (!currentUser) return [];
+  return store.groups.filter(g => g.leaderId === currentUser.id);
+}
+
+function openLeaderPanel() {
+  const leaderGroups = getLeaderGroups();
+  if (leaderGroups.length === 0) {
+    showToast('你没有管理的小组');
+    return;
+  }
+  document.getElementById('leader-panel').classList.add('active');
+  document.getElementById('view-signin').classList.add('hidden');
+  document.getElementById('view-selection').classList.add('hidden');
+  document.getElementById('view-mygroup').classList.add('hidden');
+  document.getElementById('admin-panel').classList.remove('active');
+  renderLeaderPanel();
+}
+
+function renderLeaderPanel() {
+  const leaderGroups = getLeaderGroups();
+  document.getElementById('leader-group-info').textContent =
+    '你管理的组：' + leaderGroups.map(g => g.theme || g.name).join('、');
+
+  let html = '';
+  let hasAny = false;
+
+  leaderGroups.forEach(g => {
+    const pendingRequests = store.requests.filter(r => r.groupId === g.id && r.status === 'pending');
+    if (pendingRequests.length > 0) hasAny = true;
+
+    pendingRequests.forEach(r => {
+      const p = store.participants.find(x => x.id === r.participantId);
+      html += '<div class="admin-group-item" style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<div>';
+      html += `<strong>${p ? p.nickname : '未知'}</strong>`;
+      html += `<span style="font-size:var(--font-xs);color:var(--text-light);margin-left:8px;">${p ? p.wechatId : ''}</span>`;
+      html += `<span style="font-size:var(--font-xs);color:var(--text-lighter);margin-left:4px;">→ ${g.theme || g.name}</span>`;
+      html += '</div>';
+      html += '<div style="display:flex;gap:6px;">';
+      html += `<button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${r.participantId}','${r.groupId}')">✅ 同意</button>`;
+      html += `<button class="btn btn-outline btn-sm" style="border-color:#DC2626;color:#DC2626;" onclick="rejectRequest('${r.id}')">拒绝</button>`;
+      html += '</div>';
+      html += '</div>';
+    });
+  });
+
+  if (!hasAny) {
+    html = '<p style="color:var(--text-lighter);text-align:center;padding:20px;">暂无待审批的入组申请</p>';
+  }
+
+  document.getElementById('leader-requests').innerHTML = html;
+}
+
+async function approveRequest(requestId, participantId, groupId) {
+  const group = store.groups.find(g => g.id === groupId);
+  if (!group) { showToast('小组不存在'); return; }
+
+  const memberCount = store.participants.filter(p => p.groupId === groupId).length;
+  if (memberCount >= group.maxSize) { showToast('该小组已满员，无法通过'); return; }
+
+  await approveRequestDb(requestId);
+  await updateParticipantGroup(participantId, groupId);
+  // Update current user if it's them
+  const currentUser = getCurrentUser();
+  if (currentUser && currentUser.id === participantId) {
+    currentUser.groupId = groupId;
+    setCurrentUser(currentUser);
+  }
+  showToast('已同意入组 ✅');
+  renderLeaderPanel();
+  refreshUI();
+}
+
+async function rejectRequest(requestId) {
+  await rejectRequestDb(requestId);
+  showToast('已拒绝');
+  renderLeaderPanel();
+  refreshUI();
+}
 function renderAdmin() {
   // Phase buttons
   document.querySelectorAll('.phase-btn').forEach(btn => {
@@ -1350,38 +1627,41 @@ function renderAdmin() {
 
   // Groups
   let groupsHtml = '';
-  store.groups.forEach((g, i) => {
+  store.groups.forEach((g) => {
     const memberCount = store.participants.filter(p => p.groupId === g.id).length;
     const participants = store.participants;
-    groupsHtml += '<div class="admin-group-item">';
+    const gid = g.id.replace(/'/g, "\\'");
+    groupsHtml += `<div class="admin-group-item" id="group-${gid}">`;
     groupsHtml += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">`;
-    groupsHtml += `<strong>${g.name}</strong>`;
+    groupsHtml += `<strong>${escapeHtml(g.name)}</strong>`;
     groupsHtml += `<span style="font-size:var(--font-xs);color:var(--text-light)">${memberCount}/${g.maxSize}人</span>`;
     groupsHtml += '</div>';
 
     groupsHtml += '<div class="admin-group-row">';
     groupsHtml += '<label>主题</label>';
-    groupsHtml += `<input type="text" value="${escapeHtml(g.theme || '')}" placeholder="例如：Agent开发" onchange="updateGroupField('${g.id}','theme',this.value)">`;
+    groupsHtml += `<input type="text" id="theme-${gid}" value="${escapeHtml(g.theme || '')}" placeholder="例如：Agent开发">`;
     groupsHtml += '</div>';
 
     groupsHtml += '<div class="admin-group-row">';
     groupsHtml += '<label>组长</label>';
-    groupsHtml += `<select onchange="updateGroupField('${g.id}','leaderId',this.value)">`;
+    groupsHtml += `<select id="leader-${gid}">`;
     groupsHtml += '<option value="">-- 选择组长 --</option>';
-    const groupMembers = participants.filter(p => p.groupId === g.id);
     participants.forEach(p => {
       const selected = p.id === g.leaderId ? ' selected' : '';
-      groupsHtml += `<option value="${p.id}"${selected}>${p.nickname}</option>`;
+      groupsHtml += `<option value="${p.id}"${selected}>${escapeHtml(p.nickname)}</option>`;
     });
     groupsHtml += '</select>';
     groupsHtml += '</div>';
 
     groupsHtml += '<div class="admin-group-row">';
     groupsHtml += '<label>上限</label>';
-    groupsHtml += `<input type="number" value="${g.maxSize}" min="2" max="20" onchange="updateGroupField('${g.id}','maxSize',this.value)">`;
+    groupsHtml += `<input type="number" id="maxsize-${gid}" value="${g.maxSize}" min="2" max="20">`;
     groupsHtml += '</div>';
 
-    groupsHtml += `<button class="btn btn-outline btn-sm" style="margin-top:6px;border-color:#FF6B6B;color:#FF6B6B;" onclick="deleteGroup('${g.id}')">删除此组</button>`;
+    groupsHtml += `<div style="display:flex;gap:8px;margin-top:8px;">`;
+    groupsHtml += `<button class="btn btn-primary btn-sm" style="flex:1;" onclick="saveGroup('${gid}')">💾 保存</button>`;
+    groupsHtml += `<button class="btn btn-outline btn-sm" style="border-color:#DC2626;color:#DC2626;" onclick="deleteGroup('${gid}')">删除</button>`;
+    groupsHtml += `</div>`;
     groupsHtml += '</div>';
   });
 
@@ -1399,11 +1679,11 @@ function renderAdmin() {
   store.participants.forEach(p => {
     const group = store.groups.find(g => g.id === p.groupId);
     const isLeader = store.groups.some(g => g.leaderId === p.id);
-    partHtml += `<div style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;margin-bottom:4px;background:#FFF0F5;padding:2px 10px;border-radius:100px;font-size:var(--font-xs);">`;
+    partHtml += `<div style="display:inline-flex;align-items:center;gap:4px;margin-right:8px;margin-bottom:4px;background:#F1F5F9;padding:2px 10px;border-radius:100px;font-size:var(--font-xs);">`;
     partHtml += `${isLeader ? '👑' : '👤'} ${p.nickname}`;
     if (group) partHtml += ` <span style="color:var(--primary)">[${group.theme || group.name}]</span>`;
     partHtml += ` <span style="color:var(--text-lighter)">${p.wechatId}</span>`;
-    partHtml += `<span style="cursor:pointer;color:#FF6B6B;margin-left:2px;" onclick="removeParticipant('${p.id}')" title="移除">✕</span>`;
+    partHtml += `<span style="cursor:pointer;color:#DC2626;margin-left:2px;" onclick="removeParticipant('${p.id}')" title="移除">✕</span>`;
     partHtml += '</div>';
   });
   if (store.participants.length === 0) {
@@ -1424,16 +1704,34 @@ function escapeHtml(str) {
 function refreshUI() {
   const currentUser = getCurrentUser();
   const adminPanelActive = document.getElementById('admin-panel').classList.contains('active');
+  const leaderPanelActive = document.getElementById('leader-panel').classList.contains('active');
+
+  // Show/hide leader link
+  const leaderLink = document.getElementById('link-leader');
+  const footerSep = document.getElementById('footer-sep');
+  const leaderGroups = currentUser ? store.groups.filter(g => g.leaderId === currentUser.id) : [];
+  if (leaderLink && footerSep) {
+    if (leaderGroups.length > 0) {
+      leaderLink.classList.remove('hidden');
+      footerSep.classList.remove('hidden');
+      const pendingCount = store.requests.filter(r => leaderGroups.some(g => g.id === r.groupId) && r.status === 'pending').length;
+      leaderLink.textContent = pendingCount > 0 ? `组长面板 (${pendingCount}条申请)` : '组长面板';
+    } else {
+      leaderLink.classList.add('hidden');
+      footerSep.classList.add('hidden');
+    }
+  }
 
   // Decide which view to show
   const viewSignin = document.getElementById('view-signin');
   const viewSelection = document.getElementById('view-selection');
   const viewMygroup = document.getElementById('view-mygroup');
 
-  if (adminPanelActive) {
+  if (adminPanelActive || leaderPanelActive) {
     viewSignin.classList.add('hidden');
     viewSelection.classList.add('hidden');
     viewMygroup.classList.add('hidden');
+    if (leaderPanelActive) renderLeaderPanel();
     return;
   }
 
@@ -1473,8 +1771,16 @@ function refreshUI() {
 // ============================================================
 document.getElementById('btn-signin').addEventListener('click', doSignin);
 document.getElementById('btn-resign').addEventListener('click', doResign);
+document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
 
 document.getElementById('link-admin').addEventListener('click', () => {
+  // If already logged in, go straight to admin panel
+  if (localStorage.getItem('group_signup_admin_session')) {
+    document.getElementById('admin-panel').classList.add('active');
+    document.getElementById('link-admin').classList.add('hidden');
+    renderAdmin();
+    return;
+  }
   document.getElementById('admin-password-modal').classList.add('active');
 });
 
@@ -1489,6 +1795,13 @@ document.getElementById('btn-add-group').addEventListener('click', addGroup);
 document.getElementById('btn-reset-all').addEventListener('click', resetAll);
 document.getElementById('btn-export-data').addEventListener('click', exportData);
 document.getElementById('btn-change-password').addEventListener('click', changeAdminPassword);
+
+// Leader panel
+document.getElementById('link-leader').addEventListener('click', openLeaderPanel);
+document.getElementById('btn-leader-close').addEventListener('click', () => {
+  document.getElementById('leader-panel').classList.remove('active');
+  refreshUI();
+});
 
 // Phase buttons
 document.querySelectorAll('.phase-btn').forEach(btn => {
@@ -1514,6 +1827,7 @@ async function init() {
   store = localStore;
   if (!store.groups) store.groups = [];
   if (!store.participants) store.participants = [];
+  if (!store.requests) store.requests = [];
   if (!store.phase) store.phase = 'signup';
   refreshUI();
 
@@ -1534,10 +1848,17 @@ async function init() {
       hint.textContent = '数据实时同步，所有人可见。';
     } else {
       badge.textContent = '💻 本地模式';
-      badge.style.background = '#FFF3E0';
-      badge.style.color = '#E65100';
+      badge.style.background = '#F1F5F9';
+      badge.style.color = '#475569';
       hint.textContent = '当前为本地模式，数据仅保存在此浏览器。';
     }
+  }
+
+  // Auto-login admin if session exists
+  if (localStorage.getItem('group_signup_admin_session')) {
+    document.getElementById('admin-panel').classList.add('active');
+    document.getElementById('link-admin').classList.add('hidden');
+    renderAdmin();
   }
 
   refreshUI();

@@ -1078,12 +1078,12 @@ function renderSignin() {
     return;
   }
 
-  if (currentUser) {
+  if (currentUser && !window._editingMode) {
     // Signed in, waiting
     document.getElementById('signin-form-card').classList.add('hidden');
     document.getElementById('signin-done-card').classList.remove('hidden');
     document.getElementById('signed-name').textContent = currentUser.nickname;
-  } else {
+  } else if (!window._editingMode) {
     // Not signed in yet
     document.getElementById('signin-form-card').classList.remove('hidden');
     document.getElementById('signin-done-card').classList.add('hidden');
@@ -1254,6 +1254,7 @@ async function doSignin() {
     setCurrentUser({ id: currentUser.id, nickname, wechatId, groupId: groupId });
     btn.textContent = '提交签到';
     btn.dataset.editing = 'false';
+    window._editingMode = false;
     document.getElementById('input-nickname').value = '';
     document.getElementById('input-wechat').value = '';
     document.getElementById('btn-cancel-edit').classList.add('hidden');
@@ -1302,6 +1303,7 @@ function enterEditMode() {
   document.getElementById('signin-done-card').classList.add('hidden');
   document.getElementById('view-selection').classList.add('hidden');
   document.getElementById('view-mygroup').classList.add('hidden');
+  window._editingMode = true;
   window.scrollTo(0, 0);
 }
 
@@ -1313,6 +1315,7 @@ function cancelEdit() {
   btn.dataset.editing = 'false';
   document.getElementById('btn-cancel-edit').classList.add('hidden');
   document.getElementById('signin-hint').classList.remove('hidden');
+  window._editingMode = false;
   refreshUI();
 }
 
@@ -1450,6 +1453,13 @@ function saveGroup(groupId) {
       await updateParticipantGroup(data.leaderId, groupId);
     }
 
+    // Disable save button
+    const saveBtn = document.getElementById('save-' + groupId);
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = '0.4';
+      saveBtn.textContent = '💾 已是最新';
+    }
     showToast('已保存 ✅', 1500);
     refreshUI();
   });
@@ -1530,6 +1540,11 @@ async function removeParticipant(participantId) {
     store.groups.forEach(g => { if (g.leaderId === participantId) g.leaderId = null; });
     saveLocalStore(store);
   }
+  // If removed myself, clear currentUser to show sign-in form
+  const cu = getCurrentUser();
+  if (cu && cu.id === participantId) {
+    clearCurrentUser();
+  }
   renderAdmin();
   refreshUI();
   showToast(`已移除 ${p.nickname}`);
@@ -1572,15 +1587,15 @@ function renderLeaderPanel() {
 
     pendingRequests.forEach(r => {
       const p = store.participants.find(x => x.id === r.participantId);
-      html += '<div class="admin-group-item" style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<div>';
-      html += `<strong>${p ? p.nickname : '未知'}</strong>`;
-      html += `<span style="font-size:var(--font-xs);color:var(--text-light);margin-left:8px;">${p ? p.wechatId : ''}</span>`;
-      html += `<span style="font-size:var(--font-xs);color:var(--text-lighter);margin-left:4px;">→ ${g.theme || g.name}</span>`;
-      html += '</div>';
-      html += '<div style="display:flex;gap:6px;">';
-      html += `<button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}','${r.participantId}','${r.groupId}')">✅ 同意</button>`;
-      html += `<button class="btn btn-outline btn-sm" style="border-color:#DC2626;color:#DC2626;" onclick="rejectRequest('${r.id}')">拒绝</button>`;
+      const rid = r.id.replace(/'/g, '');
+      const pid = r.participantId.replace(/'/g, '');
+      const gid = r.groupId.replace(/'/g, '');
+      html += '<div class="admin-group-item">';
+      html += `<div style="margin-bottom:10px;"><strong style="font-size:var(--font-md);">${p ? p.nickname : '未知'}</strong>`;
+      html += `<div style="font-size:var(--font-xs);color:var(--text-light);">${p ? p.wechatId : ''} → ${g.theme || g.name}</div></div>`;
+      html += `<div style="display:flex;gap:10px;">`;
+      html += `<a href="javascript:void(0)" style="flex:1;display:block;text-align:center;padding:10px 0;background:var(--primary);color:#fff;border-radius:10px;font-weight:600;font-size:var(--font-sm);text-decoration:none;" onclick="approveRequest('${rid}','${pid}','${gid}')">同意加入</a>`;
+      html += `<a href="javascript:void(0)" style="flex:1;display:block;text-align:center;padding:10px 0;background:#fff;color:#DC2626;border:1.5px solid #DC2626;border-radius:10px;font-weight:600;font-size:var(--font-sm);text-decoration:none;" onclick="rejectRequest('${rid}')">拒绝</a>`;
       html += '</div>';
       html += '</div>';
     });
@@ -1659,7 +1674,7 @@ function renderAdmin() {
     groupsHtml += '</div>';
 
     groupsHtml += `<div style="display:flex;gap:8px;margin-top:8px;">`;
-    groupsHtml += `<button class="btn btn-primary btn-sm" style="flex:1;" onclick="saveGroup('${gid}')">💾 保存</button>`;
+    groupsHtml += `<button class="btn btn-primary btn-sm save-group-btn" style="flex:1;opacity:0.4;" id="save-${gid}" disabled onclick="saveGroup('${gid}')">💾 已是最新</button>`;
     groupsHtml += `<button class="btn btn-outline btn-sm" style="border-color:#DC2626;color:#DC2626;" onclick="deleteGroup('${gid}')">删除</button>`;
     groupsHtml += `</div>`;
     groupsHtml += '</div>';
@@ -1670,6 +1685,35 @@ function renderAdmin() {
   }
 
   document.getElementById('admin-groups').innerHTML = groupsHtml;
+
+  // Attach change listeners to group fields
+  store.groups.forEach(g => {
+    const gid = g.id;
+    const themeEl = document.getElementById('theme-' + gid);
+    const leaderEl = document.getElementById('leader-' + gid);
+    const maxsizeEl = document.getElementById('maxsize-' + gid);
+    const saveBtn = document.getElementById('save-' + gid);
+    if (!themeEl || !saveBtn) return;
+
+    const checkChange = () => {
+      const themeChanged = themeEl.value.trim() !== (g.theme || '');
+      const leaderChanged = (leaderEl ? leaderEl.value : '') !== (g.leaderId || '');
+      const maxsizeChanged = maxsizeEl && parseInt(maxsizeEl.value) !== g.maxSize;
+      if (themeChanged || leaderChanged || maxsizeChanged) {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
+        saveBtn.textContent = '💾 保存';
+      } else {
+        saveBtn.disabled = true;
+        saveBtn.style.opacity = '0.4';
+        saveBtn.textContent = '💾 已是最新';
+      }
+    };
+
+    themeEl.addEventListener('input', checkChange);
+    if (leaderEl) leaderEl.addEventListener('change', checkChange);
+    if (maxsizeEl) maxsizeEl.addEventListener('input', checkChange);
+  });
 
   // Participant count
   document.getElementById('admin-participant-count').textContent = store.participants.length;
@@ -1702,7 +1746,37 @@ function escapeHtml(str) {
 // Main Render
 // ============================================================
 function refreshUI() {
-  const currentUser = getCurrentUser();
+  // Never disturb the edit form
+  if (window._editingMode) return;
+
+  let currentUser = getCurrentUser();
+
+  // Sync currentUser with server data
+  if (currentUser) {
+    const participant = store.participants.find(p => p.id === currentUser.id);
+    const leaderGroup = store.groups.find(g => g.leaderId === currentUser.id);
+
+    // If participant no longer exists, clear stale session
+    if (!participant) {
+      clearCurrentUser();
+      currentUser = null;
+    } else {
+      // Sync groupId from participant record
+      if (participant.groupId !== currentUser.groupId) {
+        currentUser.groupId = participant.groupId;
+        setCurrentUser(currentUser);
+      }
+
+      // If leader but not in group, force-join
+      if (leaderGroup && leaderGroup.id !== currentUser.groupId) {
+        updateParticipantGroup(currentUser.id, leaderGroup.id).then(() => {
+          currentUser.groupId = leaderGroup.id;
+          setCurrentUser(currentUser);
+          refreshUI();
+        });
+      }
+    }
+  }
   const adminPanelActive = document.getElementById('admin-panel').classList.contains('active');
   const leaderPanelActive = document.getElementById('leader-panel').classList.contains('active');
 
@@ -1852,13 +1926,6 @@ async function init() {
       badge.style.color = '#475569';
       hint.textContent = '当前为本地模式，数据仅保存在此浏览器。';
     }
-  }
-
-  // Auto-login admin if session exists
-  if (localStorage.getItem('group_signup_admin_session')) {
-    document.getElementById('admin-panel').classList.add('active');
-    document.getElementById('link-admin').classList.add('hidden');
-    renderAdmin();
   }
 
   refreshUI();
